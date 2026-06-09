@@ -1,0 +1,37 @@
+# Splunk Enterprise backend for Argus, containerized for reproducibility.
+# Runs on Apple Silicon via colima (see README). The MCP Server app and the
+# BOTS v3 dataset are installed into this instance after first start
+# (see scripts/setup_splunk.sh).
+services:
+  splunk:
+    image: splunk/splunk:latest
+    container_name: argus-splunk
+    hostname: splunk
+    # If `colima start` is native arm64 and the image fails to run, uncomment
+    # the next line to force amd64 emulation:
+    # platform: linux/amd64
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=${SPLUNK_PASSWORD:-Changeme123!}
+    ports:
+      - "8000:8000"   # Splunk Web UI
+      - "8088:8088"   # HTTP Event Collector
+      - "8089:8089"   # Management API + MCP Server endpoint (/services/mcp)
+    volumes:
+      - splunk-var:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+      # Staging dir: drop botsv3.tgz and the MCP server .tgz/.spl here,
+      # then install them via scripts/setup_splunk.sh
+      - ./splunk/apps:/tmp/argus-apps:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:8089/services/server/info",
+             "-u", "admin:${SPLUNK_PASSWORD:-Changeme123!}"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+    restart: unless-stopped
+
+volumes:
+  splunk-var:
+  splunk-etc:

@@ -1,0 +1,15 @@
+# Export everything globally so the KV collections, lookup definitions, and the
+# enforcement search are visible from any app context — including searches run
+# through the MCP server.
+[]
+access = read : [ * ], write : [ admin, power ]
+export = system
+
+[collections]
+export = system
+
+[transforms]
+export = system
+
+[savedsearches]
+export = system
