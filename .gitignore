@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Env / secrets
+.env
+.env.local
+*.pem
+*.token
+
+# Node / web
+node_modules/
+web/.next/
+web/dist/
+web/build/
+
+# Splunk data & apps (large / licensed downloads — not committed)
+splunk/apps/*.tgz
+splunk/apps/*.spl
+splunk/apps/botsv3/
+splunk/apps/splunk-mcp-server/
+splunk-var/
+splunk-etc/
+
+# Cases / local state
+*.sqlite
+*.db
+data/cases/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
