@@ -9,9 +9,16 @@ from rich.console import Console
 from rich.json import JSON
 from rich.table import Table
 
-from .agent import Investigator
+from .agent import Investigator, MultiAgentInvestigator
 from .config import get_settings
 from .mcp_client import SplunkMCPClient
+
+_AGENT_COLORS = {
+    "auth": "magenta",
+    "network": "cyan",
+    "endpoint": "yellow",
+    "intel": "green",
+}
 
 app = typer.Typer(help="Argus — autonomous SOC investigation agent", no_args_is_help=True)
 console = Console()
@@ -91,7 +98,8 @@ def call_tool(
 @app.command()
 def investigate(
     alert: str = typer.Argument(..., help="The alert / question to investigate"),
-    max_turns: int = typer.Option(12, help="Max agent turns"),
+    max_turns: int = typer.Option(12, help="Max agent turns (per specialist in --multi)"),
+    multi: bool = typer.Option(False, "--multi", help="Use the multi-agent specialist team"),
     respond: bool = typer.Option(False, "--respond", help="Run the response/containment phase"),
     auto: bool = typer.Option(False, "--auto", help="Auto-execute response actions (no prompts)"),
 ) -> None:
@@ -102,24 +110,45 @@ def investigate(
         ans = await asyncio.to_thread(input, "   Approve? [y/N] ")
         return ans.strip().lower() in ("y", "yes")
 
+    def _label(ev: dict) -> str:
+        a = ev.get("agent")
+        if not a:
+            return ""
+        color = _AGENT_COLORS.get(a, "white")
+        return f"[bold {color}]{a} ▸[/bold {color}] "
+
     async def run() -> None:
         async with _client() as c:
-            inv = Investigator(c)
+            inv = MultiAgentInvestigator(c) if multi else Investigator(c)
             report = None
-            async for ev in inv.investigate(alert, max_turns=max_turns):
+            stream = (
+                inv.investigate(alert, max_turns_each=max_turns)
+                if multi
+                else inv.investigate(alert, max_turns=max_turns)
+            )
+            async for ev in stream:
                 kind = ev["type"]
-                if kind == "thinking":
-                    console.print(f"[dim]{ev['text']}[/dim]", end="")
+                lbl = _label(ev)
+                if kind == "multi_start":
+                    console.print(f"[bold]── Specialist team:[/bold] {', '.join(ev['agents'])} (running concurrently)")
+                elif kind == "specialist_started":
+                    console.print(f"\n{lbl}[dim]started[/dim]")
+                elif kind == "specialist_done":
+                    console.print(f"\n{lbl}[bold green]✓ findings ready[/bold green]")
+                elif kind == "thinking":
+                    if not multi:
+                        console.print(f"[dim]{ev['text']}[/dim]", end="")
                 elif kind == "text":
-                    console.print(ev["text"], end="")
+                    if not multi:
+                        console.print(ev["text"], end="")
                 elif kind == "tool_call":
                     console.print(
-                        f"\n[bold cyan]→ {ev['name']}[/bold cyan] "
-                        f"[dim]{json.dumps(ev['input'])[:200]}[/dim]"
+                        f"\n{lbl}[bold cyan]→ {ev['name']}[/bold cyan] "
+                        f"[dim]{json.dumps(ev['input'])[:160]}[/dim]"
                     )
                 elif kind == "tool_result":
                     tag = "[red]✗ error[/red]" if ev["is_error"] else "[green]✓[/green]"
-                    console.print(f"  {tag} [dim]{ev['text'][:200].strip()}[/dim]")
+                    console.print(f"  {lbl}{tag} [dim]{ev['text'][:160].strip()}[/dim]")
                 elif kind == "report":
                     report = ev["report"]
                     console.print("\n[bold]── Incident Report ──[/bold]")
