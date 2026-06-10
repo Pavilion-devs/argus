@@ -149,10 +149,34 @@ def investigate(
                 elif kind == "tool_result":
                     tag = "[red]✗ error[/red]" if ev["is_error"] else "[green]✓[/green]"
                     console.print(f"  {lbl}{tag} [dim]{ev['text'][:160].strip()}[/dim]")
+                elif kind == "recall":
+                    rec = ev["recall"]
+                    nc, nb = len(rec.get("related_cases", [])), len(rec.get("blocklist_hits", []))
+                    console.print(f"  {lbl}[blue]🧠 memory:[/blue] {nc} prior case(s), {nb} already-blocked")
+                    for c in rec.get("related_cases", [])[:3]:
+                        console.print(f"     [dim]↳ {c.get('case_id')} {c.get('verdict')} — shared {', '.join(c.get('overlap', []))}[/dim]")
+                elif kind == "hypothesis":
+                    h = ev.get("hypothesis") or {}
+                    col = {"confirmed": "green", "refuted": "red", "open": "yellow"}.get(h.get("status"), "white")
+                    console.print(f"  {lbl}[{col}]◆ hypothesis [{h.get('status')}][/{col}] [dim]{(h.get('statement') or '')[:90]}[/dim]")
                 elif kind == "report":
                     report = ev["report"]
+                    r = report
                     console.print("\n[bold]── Incident Report ──[/bold]")
-                    console.print(JSON(json.dumps(ev["report"])))
+                    console.print(
+                        f"[bold]{(r.get('verdict') or '').upper()}[/bold] · {r.get('severity')} · "
+                        f"risk [bold]{r.get('risk_score', '?')}/100[/bold] ({r.get('risk_band', '')}) · "
+                        f"conf {r.get('confidence')}"
+                    )
+                    kc = " → ".join(k["label"] for k in r.get("kill_chain", []))
+                    if kc:
+                        console.print(f"[dim]ATT&CK kill-chain:[/dim] {kc}")
+                    if r.get("prior_cases"):
+                        console.print(f"[blue]🧠 linked to {len(r['prior_cases'])} prior case(s) in memory[/blue]")
+                    if r.get("mitre_invalid"):
+                        console.print(f"[red]⚠ invalid ATT&CK ids dropped:[/red] {', '.join(r['mitre_invalid'])}")
+                    console.print(f"[dim]risk: {r.get('risk_rationale', '')}[/dim]")
+                    console.print(JSON(json.dumps(report)))
                 elif kind == "error":
                     console.print(f"[red]{ev['text']}[/red]")
 
@@ -193,16 +217,53 @@ def cases() -> None:
             if not rows:
                 console.print("[dim]no cases recorded yet[/dim]")
                 return
-            table = Table("Case", "Verdict", "Sev", "Conf", "Title", "Created")
+            table = Table("Case", "Verdict", "Sev", "Risk", "Conf", "Title", "Created")
             for r in sorted(rows, key=lambda x: x.get("created_at", ""), reverse=True):
+                risk = r.get("risk_score")
                 table.add_row(
                     r.get("case_id", ""), r.get("verdict", ""), r.get("severity", ""),
+                    (f"{risk}/100" if risk not in (None, "") else "—"),
                     str(r.get("confidence", "")), (r.get("title", "") or "")[:50],
                     (r.get("created_at", "") or "")[:19],
                 )
             console.print(table)
 
     asyncio.run(run())
+
+
+@app.command()
+def detections() -> None:
+    """List the detections Argus has auto-deployed (the self-hardening loop's output)."""
+    from .connectors import ResponseEngine
+
+    async def run() -> None:
+        async with _client() as c:
+            engine = ResponseEngine(get_settings(), c)
+            try:
+                rows = await engine.list_detections()
+            finally:
+                await engine.aclose()
+            if not rows:
+                console.print("[dim]no auto-deployed detections yet[/dim]")
+                return
+            table = Table("Detection", "Schedule", "On", "SPL")
+            for r in rows:
+                on = "✓" if str(r.get("is_scheduled")) in ("1", "True", "true") else "—"
+                table.add_row(
+                    r["name"], r.get("cron_schedule", ""), on, (r.get("search", "") or "")[:64]
+                )
+            console.print(table)
+
+    asyncio.run(run())
+
+
+@app.command(name="mitre-sync")
+def mitre_sync() -> None:
+    """(Re)build the local MITRE ATT&CK technique catalog from the pinned release."""
+    from .mitre import MitreCatalog, sync_catalog
+
+    n = sync_catalog()
+    console.print(f"[green]✓[/green] ATT&CK v{MitreCatalog.version()} catalog synced: {n} techniques")
 
 
 @app.command()
@@ -238,8 +299,8 @@ def monitor(
                     console.print(f"  [cyan]→ {ev['name']}[/cyan] [dim]{json.dumps(ev['input'])[:120]}[/dim]")
                 elif kind == "report":
                     r = ev["report"]
-                    console.print(f"  [bold]verdict:[/bold] {r['verdict']} · {r['severity']} "
-                                  f"(conf {r['confidence']}) — {r['title'][:70]}")
+                    console.print(f"  [bold]verdict:[/bold] {r['verdict']} · {r['severity']} · "
+                                  f"risk {r.get('risk_score', '?')}/100 (conf {r['confidence']}) — {r['title'][:70]}")
                 elif kind == "case_created":
                     console.print(f"  [blue]📁 case {ev['case_id']} recorded[/blue]")
                 elif kind == "action_executed":
@@ -253,7 +314,7 @@ def monitor(
 @app.command(name="eval")
 def run_eval_cmd(
     scenarios: str = typer.Option("", help="Comma-separated scenario ids (default: all)"),
-    max_turns: int = typer.Option(8, help="Max agent turns per scenario"),
+    max_turns: int = typer.Option(12, help="Max agent turns per scenario (matches investigate default)"),
     out: str = typer.Option("eval/results.json", help="Where to write the JSON results"),
 ) -> None:
     """Run the evaluation harness over BOTS scenarios and report accuracy metrics."""

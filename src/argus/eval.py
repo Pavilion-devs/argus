@@ -151,7 +151,10 @@ async def run_scenario(
     iocs = _extract_iocs(report)
     matched = [e for e in sc.expected_indicators if _matched(e, iocs)]
     recall = (len(matched) / len(sc.expected_indicators)) if sc.expected_indicators else None
-    grounded, checked, ungrounded = await grounding_precision(mcp, report.get("iocs", []) or [])
+    # Ground the FULL concrete IOC set the agent surfaced (iocs + entity values),
+    # not just the `iocs` field — otherwise the headline zero-hallucination metric
+    # silently checks nothing when the model files indicators under entities.
+    grounded, checked, ungrounded = await grounding_precision(mcp, iocs)
     verdict_ok = report.get("verdict") in sc.expected_verdict
 
     return {
@@ -161,6 +164,10 @@ async def run_scenario(
         "verdict_ok": verdict_ok,
         "severity": report.get("severity"),
         "confidence": report.get("confidence"),
+        "risk_score": report.get("risk_score"),
+        "risk_band": report.get("risk_band"),
+        "kill_chain": [k.get("label") for k in report.get("kill_chain", []) or []],
+        "mitre_invalid": report.get("mitre_invalid", []) or [],
         "indicator_recall": recall,
         "matched_indicators": matched,
         "expected_indicators": sc.expected_indicators,
@@ -195,11 +202,13 @@ async def run_eval(
     )
     recalls = [r["indicator_recall"] for r in scored if r["indicator_recall"] is not None]
     gps = [r["grounding_precision"] for r in scored if r["grounding_precision"] is not None]
+    total_invalid_mitre = sum(len(r.get("mitre_invalid", [])) for r in scored)
     summary = {
         "scenarios": len(scored),
         "verdict_accuracy": round(verdict_acc, 3) if verdict_acc is not None else None,
         "mean_indicator_recall": round(sum(recalls) / len(recalls), 3) if recalls else None,
         "mean_grounding_precision": round(sum(gps) / len(gps), 3) if gps else None,
+        "invalid_mitre_techniques": total_invalid_mitre,
         "mean_queries": round(sum(r["n_queries"] for r in scored) / len(scored), 1) if scored else None,
         "mean_duration_s": round(sum(r["duration_s"] for r in scored) / len(scored), 1) if scored else None,
         "model": settings.resolved_model,
