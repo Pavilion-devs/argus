@@ -241,6 +241,12 @@ MAX_TURNS = 12
 PER_TURN_MAX_TOKENS = 16000
 TOOL_RESULT_CHAR_CAP = 4000
 
+# Confidence-gated continuation: if the first synthesis hedges to `inconclusive`
+# with low confidence, push ONE more focused pass to pursue the decisive pivot
+# before finalizing — rather than under-calling a real threat.
+CONTINUATION_TURNS = 4
+CONTINUATION_CONF = 0.65
+
 
 def _truncate(text: str, cap: int = TOOL_RESULT_CHAR_CAP) -> str:
     if len(text) <= cap:
@@ -303,6 +309,7 @@ class Investigator:
         self.model = self.settings.resolved_model
         self._ti: ThreatIntel | None = None
         self.recalls: list[dict[str, Any]] = []
+        self._messages: list[dict[str, Any]] = []
 
     def _threatintel(self) -> ThreatIntel:
         if self._ti is None:
@@ -334,12 +341,29 @@ class Investigator:
         *,
         max_turns: int,
         agent: str = "",
+        messages: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Shared plan→act→observe→re-plan loop. Yields display events tagged with
-        `agent`, and finally one {"type": "_final", "text": <analysis>} event."""
+        `agent`, and finally one {"type": "_final", "text": <analysis>} event.
+
+        Pass `messages` to RESUME an existing conversation (the continuation gate uses
+        this to push one more focused pass); `initial_user` is then appended as a new
+        user turn. The full conversation is left on `self._messages` for resumption."""
         tools = self._tools()
         system = [{"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}]
-        messages: list[dict[str, Any]] = [{"role": "user", "content": initial_user}]
+        if messages is None:
+            messages = [{"role": "user", "content": initial_user}]
+        elif messages and messages[-1].get("role") == "user":
+            # Resuming after a user turn (e.g. trailing tool_results) — fold the
+            # directive into it to avoid two consecutive user turns.
+            prev = messages[-1].get("content")
+            if isinstance(prev, str):
+                messages[-1]["content"] = prev + "\n\n" + initial_user
+            else:
+                messages[-1]["content"] = list(prev) + [{"type": "text", "text": initial_user}]
+        else:
+            messages.append({"role": "user", "content": initial_user})
+        self._messages = messages
         final_text = ""
 
         for _turn in range(max_turns):
@@ -457,6 +481,30 @@ class Investigator:
                 yield ev
 
         report = await self._synthesize(final_text)
+
+        # Confidence-gated continuation: if the agent hedged to a low-confidence
+        # `inconclusive`, push ONE focused pass to pursue the decisive pivot and then
+        # commit — instead of under-calling a real threat. Resolving the pivot can just
+        # as well CONFIRM benign, so this never forces a true_positive.
+        if self._needs_continuation(report):
+            yield {
+                "type": "continuation",
+                "reason": "low-confidence inconclusive — pursuing the decisive pivot",
+                "verdict": report.verdict,
+                "confidence": report.confidence,
+            }
+            async for ev in self._agent_loop(
+                INVESTIGATOR_SYSTEM,
+                self._continuation_directive(report),
+                max_turns=CONTINUATION_TURNS,
+                messages=self._messages,
+            ):
+                if ev["type"] == "_final":
+                    final_text = ev["text"] or final_text
+                else:
+                    yield ev
+            report = await self._synthesize(final_text)
+
         rep = enrich.enrich_report(
             report.model_dump(),
             evidence_pairs=self._evidence_pairs(),
@@ -465,6 +513,41 @@ class Investigator:
         )
         yield {"type": "report", "report": rep}
         yield {"type": "done"}
+
+    def _needs_continuation(self, report: InvestigationReport) -> bool:
+        """Trigger one more focused pass only when the agent under-calls: a
+        low-confidence `inconclusive`. Confident verdicts (either way) finalize."""
+        return report.verdict == "inconclusive" and float(report.confidence or 0) < CONTINUATION_CONF
+
+    def _continuation_directive(self, report: InvestigationReport) -> str:
+        open_hyps = [
+            h.get("statement", "") for h in self.hypotheses.values() if h.get("status") == "open"
+        ]
+        hyp_txt = (
+            "\n\nUnresolved hypotheses to settle:\n" + "\n".join(f"- {s}" for s in open_hyps)
+            if open_hyps
+            else ""
+        )
+        return (
+            f"Your current verdict is INCONCLUSIVE at confidence {float(report.confidence or 0):.2f}. "
+            "That is not a finished investigation — run the decisive pivot, then COMMIT to the "
+            f"verdict the evidence supports for the activity this alert flagged.{hyp_txt}\n\n"
+            "Run the single most decisive pivot now:\n"
+            "- If a suspicious/masquerading process or executable is involved, pull its Sysmon "
+            "EventID 1 process-creation lineage — Image, ParentImage, full CommandLine, Hashes, "
+            "User — and any network connections. Sysmon data here is raw XML; extract with "
+            "`rex field=_raw \"Name='CommandLine'>(?<CommandLine>[^<]+)\"` (and ParentImage, Image, "
+            "Hashes).\n"
+            "- If an account/IP/domain/DNS query is involved, pull the specific records that reveal "
+            "what it actually is.\n\n"
+            "Then commit to the truth: **true_positive** if the pivot shows the flagged activity is "
+            "genuinely malicious (reverse shell, exploit, C2, credential theft, a masquerading "
+            "binary); **false_positive** if it shows the activity is benign or expected (a legitimate "
+            "program, a public DNS resolver, a normal admin task) — a confident benign ruling is just "
+            "as valuable, so do not inflate it into a threat, and do not promote unrelated activity on "
+            "the host into a verdict for THIS alert. Stay `inconclusive` only if the data genuinely "
+            "cannot answer the question."
+        )
 
     async def respond(
         self,

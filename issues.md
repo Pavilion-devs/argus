@@ -16,7 +16,12 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
   `34.215.24.225`**. Either it's reachable only via a pivot the agent doesn't take, or the
   curated ground-truth set is itself debatable. Action: trace where `34.215.24.225` lives
   in `botsv3` and decide whether to improve the pivot or revise the ground truth.
-- 🟠 **Endpoint verdict variance** — see [`problems.md`](problems.md) P2.
+- ✅ **Endpoint verdict variance — RESOLVED** (see [`problems.md`](problems.md) P2): Sysmon-XML
+  extraction tradecraft + a confidence-gated continuation. Verified 3/3 true_positive.
+- 🟢 **Confidence-gated continuation adds latency to inconclusive runs.** When the first verdict
+  is a low-confidence `inconclusive`, Argus runs one extra ~4-turn pass before finalizing. Only
+  fires on hedged verdicts (confident ones finalize immediately), but it does add a minute or two
+  to those cases. Acceptable trade for not under-calling.
 - 🟢 **Hypothesis ledger can add cognitive load.** On a tight turn budget the
   `track_hypothesis` / `recall_memory` calls cost reasoning steps; an unconfirmed
   contributor to shallower investigations on some runs. Mitigated by the agent batching
@@ -71,10 +76,15 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
 
 ## Evaluation harness
 
-- 🟠 **Single-sample per scenario** — see [`problems.md`](problems.md) P1.
-- 🟢 **`results.json` reflects one unlucky run** (verdict 0.667). Will be superseded once
-  multi-sample lands. Grounding precision (100%) and invalid-MITRE (0) in that file are
-  solid; the verdict number is the noisy one.
+- ✅ **Single-sample per scenario — RESOLVED** (see [`problems.md`](problems.md) P1): added
+  `argus eval --repeat K` reporting per-scenario verdict pass-rates + distributions.
+- ✅ **`results.json` now reflects a multi-sample run** (`--repeat 3`, 9 investigations:
+  verdict_accuracy 1.0, grounding 0.989, 0 invalid MITRE). It carries a `per_scenario` pass-rate
+  block. Note this is 3 samples/scenario — a strong signal, not a guarantee of 100% forever; run
+  a higher `--repeat` for tighter confidence intervals.
+- 🟢 **Indicator recall is still the soft metric** (mean ~0.58): `aws_cred_abuse` stays at 50%
+  (misses `34.215.24.225`) and `endpoint_malware` recall varies run-to-run even when the verdict
+  is correct. Verdict + grounding are solid; IOC enumeration is the remaining gap (see top item).
 - 🟢 **`recall_memory` not counted in `n_queries`.** By design (it's a memory check, not a
   data query), but it means the eval "Q" column slightly understates total tool calls.
 - 🟢 **Eval default `max_turns` raised 8 → 12.** More representative of real `investigate`
