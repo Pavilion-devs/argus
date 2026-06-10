@@ -98,8 +98,8 @@ class ResponseEngine:
         )
         return {"ok": True, "key": key, "case_id": case_id, "collection": "argus_cases"}
 
-    async def list_blocklist(self) -> list[dict[str, Any]]:
-        url = self.settings.splunk_base_url + _KV_PATH.format(collection="argus_threat_blocklist")
+    async def _kv_list(self, collection: str) -> list[dict[str, Any]]:
+        url = self.settings.splunk_base_url + _KV_PATH.format(collection=collection)
         resp = await self._http.get(
             url,
             headers={"Authorization": f"Bearer {self.settings.splunk_token}"},
@@ -107,6 +107,12 @@ class ResponseEngine:
         )
         resp.raise_for_status()
         return resp.json()
+
+    async def list_blocklist(self) -> list[dict[str, Any]]:
+        return await self._kv_list("argus_threat_blocklist")
+
+    async def list_cases(self) -> list[dict[str, Any]]:
+        return await self._kv_list("argus_cases")
 
     # ---- Enforcement (MCP-native, read-only) -------------------------------
     async def run_enforcement(self) -> dict[str, Any]:
