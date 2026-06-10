@@ -1,0 +1,85 @@
+{
+  "summary": {
+    "scenarios": 3,
+    "verdict_accuracy": 1.0,
+    "mean_indicator_recall": 0.75,
+    "mean_grounding_precision": 1.0,
+    "mean_queries": 18.7,
+    "mean_duration_s": 126.9,
+    "model": "global.anthropic.claude-sonnet-4-6",
+    "provider": "bedrock",
+    "ground_truth_missing": {}
+  },
+  "results": [
+    {
+      "id": "aws_cred_abuse",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.95,
+      "indicator_recall": 0.5,
+      "matched_indicators": [
+        "139.198.18.205"
+      ],
+      "expected_indicators": [
+        "139.198.18.205",
+        "34.215.24.225"
+      ],
+      "grounding_precision": null,
+      "grounded": 0,
+      "iocs_checked": 0,
+      "ungrounded_iocs": [],
+      "n_queries": 25,
+      "duration_s": 152.8,
+      "ioc_count": 18
+    },
+    {
+      "id": "endpoint_malware",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.92,
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "iexeplorer.exe"
+      ],
+      "expected_indicators": [
+        "iexeplorer.exe"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 1,
+      "iocs_checked": 1,
+      "ungrounded_iocs": [],
+      "n_queries": 15,
+      "duration_s": 118.0,
+      "ioc_count": 5
+    },
+    {
+      "id": "benign_dns_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.72,
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": null,
+      "grounded": 0,
+      "iocs_checked": 0,
+      "ungrounded_iocs": [],
+      "n_queries": 16,
+      "duration_s": 109.8,
+      "ioc_count": 6
+    }
+  ]
+}

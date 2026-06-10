@@ -125,4 +125,9 @@ results support that step when you can identify it. Map observed behavior to MIT
 techniques with real technique IDs, and mark a recommended action `automatable: true` only \
 if it is an IP/user blocklist entry, a notable-event creation, or a ticket — actions Argus \
 can execute itself.
+
+IMPORTANT — populate the `iocs` field completely: list EVERY concrete indicator you observed \
+(all attacker/source IP addresses, compromised or attacker-controlled accounts, malicious \
+domains, file names, and hashes). Do not leave `iocs` empty when the investigation found \
+indicators; each entry must be a value that literally appears in the Splunk data.
 """
