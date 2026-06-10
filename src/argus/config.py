@@ -14,7 +14,28 @@ class Settings(BaseSettings):
 
     # --- Claude / Anthropic ---
     anthropic_api_key: str = Field("", alias="ANTHROPIC_API_KEY")
-    model: str = Field("claude-opus-4-8", alias="ARGUS_MODEL")
+    model: str = Field("claude-sonnet-4-6", alias="ARGUS_MODEL")
+
+    # --- Provider: "anthropic" (direct API) or "bedrock" (AWS, via boto3) ---
+    provider: str = Field("anthropic", alias="ARGUS_PROVIDER")
+    aws_bearer_token_bedrock: str = Field("", alias="AWS_BEARER_TOKEN_BEDROCK")
+    aws_region: str = Field("us-west-2", alias="AWS_REGION")
+
+    # Maps our friendly model names to Bedrock inference-profile IDs.
+    _BEDROCK_MODEL_IDS = {
+        "claude-sonnet-4-6": "global.anthropic.claude-sonnet-4-6",
+        "claude-opus-4-6": "global.anthropic.claude-opus-4-6-v1",
+        "claude-haiku-4-5": "anthropic.claude-haiku-4-5-20251001-v1:0",
+    }
+
+    @property
+    def resolved_model(self) -> str:
+        """The model identifier to send on the wire for the active provider."""
+        if self.provider == "bedrock":
+            return self._BEDROCK_MODEL_IDS.get(
+                self.model, f"global.anthropic.{self.model}"
+            )
+        return self.model
 
     # --- Splunk MCP Server ---
     splunk_mcp_url: str = Field(
