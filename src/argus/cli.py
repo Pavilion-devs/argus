@@ -159,6 +159,11 @@ def investigate(
                     h = ev.get("hypothesis") or {}
                     col = {"confirmed": "green", "refuted": "red", "open": "yellow"}.get(h.get("status"), "white")
                     console.print(f"  {lbl}[{col}]◆ hypothesis [{h.get('status')}][/{col}] [dim]{(h.get('statement') or '')[:90]}[/dim]")
+                elif kind == "continuation":
+                    console.print(
+                        f"\n[bold yellow]↻ continuation[/bold yellow] [dim]verdict was "
+                        f"{ev.get('verdict')} @ conf {ev.get('confidence')} — {ev.get('reason')}[/dim]"
+                    )
                 elif kind == "report":
                     report = ev["report"]
                     r = report
@@ -315,9 +320,13 @@ def monitor(
 def run_eval_cmd(
     scenarios: str = typer.Option("", help="Comma-separated scenario ids (default: all)"),
     max_turns: int = typer.Option(12, help="Max agent turns per scenario (matches investigate default)"),
+    repeat: int = typer.Option(1, help="Runs per scenario — multi-sample to report a verdict pass-rate"),
     out: str = typer.Option("eval/results.json", help="Where to write the JSON results"),
 ) -> None:
-    """Run the evaluation harness over BOTS scenarios and report accuracy metrics."""
+    """Run the evaluation harness over BOTS scenarios and report accuracy metrics.
+
+    With --repeat K, each scenario runs K times and reports a verdict PASS-RATE +
+    distribution — the honest view on a stochastic agent (a single run is one noisy draw)."""
     import pathlib
 
     from .eval import run_eval
@@ -326,22 +335,44 @@ def run_eval_cmd(
 
     async def run() -> None:
         async with _client() as c:
-            console.print("[bold]Running Argus evaluation…[/bold] (this runs full investigations)")
-            data = await run_eval(c, scenario_ids=ids, max_turns=max_turns)
+            console.print(
+                f"[bold]Running Argus evaluation…[/bold] (full investigations · {repeat}×/scenario)"
+            )
+            data = await run_eval(c, scenario_ids=ids, max_turns=max_turns, repeat=repeat)
 
-            table = Table("Scenario", "Verdict", "OK", "Recall", "Grounding", "Q", "secs")
+            multi = repeat > 1
+            cols = (["Scenario", "Run"] if multi else ["Scenario"]) + [
+                "Verdict", "OK", "Recall", "Grounding", "Q", "secs"
+            ]
+            table = Table(*cols)
             for r in data["results"]:
+                base = [r["id"]] + ([str(r.get("run", 1))] if multi else [])
                 if "error" in r:
-                    table.add_row(r["id"], "[red]ERROR[/red]", "", "", "", "", str(r.get("duration_s", "")))
+                    table.add_row(*base, "[red]ERROR[/red]", "", "", "", "", str(r.get("duration_s", "")))
                     continue
                 recall = "—" if r["indicator_recall"] is None else f"{r['indicator_recall']*100:.0f}%"
                 gp = "—" if r["grounding_precision"] is None else f"{r['grounding_precision']*100:.0f}% ({r['grounded']}/{r['iocs_checked']})"
                 table.add_row(
-                    r["id"], str(r["verdict"]),
+                    *base, str(r["verdict"]),
                     "[green]✓[/green]" if r["verdict_ok"] else "[red]✗[/red]",
                     recall, gp, str(r["n_queries"]), str(r["duration_s"]),
                 )
             console.print(table)
+
+            if multi and data.get("per_scenario"):
+                console.print("\n[bold]── Per-scenario verdict pass-rate ──[/bold]")
+                pt = Table("Scenario", "Pass-rate", "Verdict distribution", "Recall", "Grounding")
+                for ps in data["per_scenario"]:
+                    dist = ", ".join(f"{k}×{v}" for k, v in ps["verdict_distribution"].items())
+                    rc = "—" if ps["mean_indicator_recall"] is None else f"{ps['mean_indicator_recall']*100:.0f}%"
+                    gpv = "—" if ps["mean_grounding_precision"] is None else f"{ps['mean_grounding_precision']*100:.0f}%"
+                    rate = ps["verdict_pass_rate"]
+                    col = "green" if rate >= 0.8 else "yellow" if rate >= 0.5 else "red"
+                    pt.add_row(
+                        ps["id"], f"[{col}]{ps['passes']}/{ps['runs']} ({rate*100:.0f}%)[/{col}]",
+                        dist, rc, gpv,
+                    )
+                console.print(pt)
 
             s = data["summary"]
             console.print("\n[bold]── Aggregate ──[/bold]")

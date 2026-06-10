@@ -181,22 +181,57 @@ async def run_scenario(
     }
 
 
+def _aggregate_scenario(scenario: Scenario, runs: list[dict]) -> dict:
+    """Per-scenario aggregation across repeated runs: verdict pass-RATE + distribution
+    are the honest signals on a stochastic agent (vs a single noisy pass/fail)."""
+    n = len(runs)
+    passes = sum(1 for r in runs if r["verdict_ok"])
+    dist: dict[str, int] = {}
+    for r in runs:
+        dist[r["verdict"]] = dist.get(r["verdict"], 0) + 1
+    recalls = [r["indicator_recall"] for r in runs if r["indicator_recall"] is not None]
+    gps = [r["grounding_precision"] for r in runs if r["grounding_precision"] is not None]
+    return {
+        "id": scenario.id,
+        "runs": n,
+        "verdict_pass_rate": round(passes / n, 3) if n else None,
+        "passes": passes,
+        "verdict_distribution": dist,
+        "expected_verdict": scenario.expected_verdict,
+        "mean_indicator_recall": round(sum(recalls) / len(recalls), 3) if recalls else None,
+        "mean_grounding_precision": round(sum(gps) / len(gps), 3) if gps else None,
+        "invalid_mitre": sum(len(r.get("mitre_invalid", [])) for r in runs),
+    }
+
+
 async def run_eval(
     mcp: SplunkMCPClient,
     *,
     settings: Settings | None = None,
     scenario_ids: list[str] | None = None,
-    max_turns: int = 8,
+    max_turns: int = 12,
+    repeat: int = 1,
 ) -> dict:
     settings = settings or get_settings()
     scenarios = [s for s in SCENARIOS if not scenario_ids or s.id in scenario_ids]
+    repeat = max(1, repeat)
 
     missing = await validate_ground_truth(mcp)
     results = []
     for sc in scenarios:
-        results.append(await run_scenario(mcp, settings, sc, max_turns=max_turns))
+        for run_idx in range(repeat):
+            r = await run_scenario(mcp, settings, sc, max_turns=max_turns)
+            r["run"] = run_idx + 1
+            results.append(r)
 
     scored = [r for r in results if "error" not in r]
+    # Per-scenario pass-RATE over the K samples (the statistically honest view).
+    per_scenario = [
+        _aggregate_scenario(sc, [r for r in scored if r["id"] == sc.id])
+        for sc in scenarios
+        if any(r["id"] == sc.id for r in scored)
+    ]
+    # Headline verdict accuracy is a rate over ALL runs (scenarios × repeat).
     verdict_acc = (
         sum(1 for r in scored if r["verdict_ok"]) / len(scored) if scored else None
     )
@@ -204,7 +239,9 @@ async def run_eval(
     gps = [r["grounding_precision"] for r in scored if r["grounding_precision"] is not None]
     total_invalid_mitre = sum(len(r.get("mitre_invalid", [])) for r in scored)
     summary = {
-        "scenarios": len(scored),
+        "scenarios": len(scenarios),
+        "repeat": repeat,
+        "total_runs": len(scored),
         "verdict_accuracy": round(verdict_acc, 3) if verdict_acc is not None else None,
         "mean_indicator_recall": round(sum(recalls) / len(recalls), 3) if recalls else None,
         "mean_grounding_precision": round(sum(gps) / len(gps), 3) if gps else None,
@@ -215,4 +252,4 @@ async def run_eval(
         "provider": settings.provider,
         "ground_truth_missing": missing,
     }
-    return {"summary": summary, "results": results}
+    return {"summary": summary, "per_scenario": per_scenario, "results": results}

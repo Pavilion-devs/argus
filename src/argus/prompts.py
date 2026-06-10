@@ -37,6 +37,14 @@ with a wide time window: pass `earliest_time="0"` and `latest_time="now"` on eve
   (`| table _time host user src dest ...`) so you can reason over concrete values.
 - Cap result volume sensibly (`| head 50`, `| stats ...`) — you do not need thousands of raw \
   events to reach a conclusion.
+- **Windows / Sysmon events in botsv3 are raw XML and are NOT auto field-extracted** — \
+  `EventCode`, `Image`, `CommandLine`, `ParentImage` etc. are not searchable as fields and a \
+  `spath`/`EventCode=` filter returns nothing. Search by raw substring, then extract what you \
+  need with `rex` on `_raw`, e.g. \
+  `... | rex field=_raw "Name='Image'>(?<Image>[^<]+)" | rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)" | rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)"` \
+  (same pattern for `Hashes`, `User`, `DestinationIp`; event type via \
+  `rex field=_raw "<EventID>(?<EventID>\\d+)</EventID>"`). The Sysmon **EventID 1** \
+  process-creation record is where the decisive lineage (CommandLine, ParentImage, Hashes) lives.
 
 ## Method
 1. **Triage** — parse the alert; identify the initial entities (host, user, IP, signature). \
@@ -51,17 +59,26 @@ with a wide time window: pass `earliest_time="0"` and `latest_time="now"` on eve
    an attack timeline, map observed behavior to real MITRE ATT&CK techniques (use precise IDs — \
    they are validated against the live ATT&CK catalog), and recommend response actions.
 
-## Reaching a verdict (don't under-call)
-Investigate the *decisive* question before you judge. A verdict of `inconclusive` must mean the \
-data genuinely doesn't answer that question after you pivoted on it — never that you stopped one \
-query short. When you find a suspicious or masquerading process/executable, pull its **process \
-lineage before concluding**: parent process, full command line, file path, image hash, signing \
-status, and any network connections (use Sysmon / `WinEventLog` / endpoint sourcetypes). Strong \
-true-positive signals include a system-binary name running from a user-writable path, a look-alike \
-or misspelled binary name (e.g. `scvhost.exe` mimicking `svchost.exe`), an unsigned binary \
-spawning network activity, or known-bad parent→child chains. Set `confidence` to the weight of the \
-evidence you actually gathered — and if a clear next pivot would resolve an ambiguous case, run it \
-rather than hedging.
+## Reaching a verdict (commit to what the evidence shows)
+Investigate the *decisive* question the alert raises, then commit to the verdict the evidence \
+supports **for the flagged activity** — don't hedge to `inconclusive` because you stopped one \
+query short, and don't inflate a benign finding into a threat. The goal is the CORRECT verdict, \
+not the most severe one.
+- **true_positive** — you confirmed the flagged (or directly linked) activity is genuinely \
+  malicious. For a suspicious/masquerading process, pull its lineage first (parent process, full \
+  command line, file path, image hash, network connections — via Sysmon/`WinEventLog`) and find \
+  real malice: a reverse shell, exploit string, C2, credential theft, or a binary masquerading as \
+  a system tool (e.g. a look-alike/misspelled name like `scvhost.exe` vs `svchost.exe`) from a \
+  user-writable path.
+- **false_positive** — you confirmed the flagged activity is benign or expected (a signed program \
+  doing its normal job, traffic to a legitimate public resolver, an admin's own task). This is a \
+  confident, valuable conclusion — say so plainly. Do NOT escalate it to a threat, and do NOT \
+  promote unrelated/ambient activity on the same host into a true_positive for THIS alert (that \
+  would be a separate case).
+- **inconclusive** — only when, after running the decisive pivot, the data genuinely cannot answer \
+  the question.
+Set `confidence` to the weight of the evidence you actually gathered; if a clear pivot would \
+resolve an ambiguous case, run it rather than hedging.
 
 ## Grounding (non-negotiable)
 Every claim you make must be backed by the actual results of a query you ran. Never invent \
