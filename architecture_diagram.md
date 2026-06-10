@@ -2,57 +2,62 @@
 
 > Required by the hackathon rules at repo root. Shows how Argus interacts with
 > Splunk, how the AI agents are integrated, and the data flow between components.
-> (A rendered `.png` version will accompany this before submission.)
 
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│  WEB UI  (React)                                                        │
-│  • streaming agent reasoning trace   • live SPL + results               │
-│  • attack timeline + entity graph    • evidence drill-down (claim→SPL)  │
-│  • case management   • response approval / auto-execute toggle          │
-└───────────────────────────────┬───────────────────────────────────────┘
-                                │  WebSocket / SSE (streaming)
-┌───────────────────────────────▼───────────────────────────────────────┐
-│  ARGUS ORCHESTRATOR  (Python / FastAPI · Claude API = reasoning brain)  │
-│                                                                         │
-│   Lead Investigator agent:  plan → act → observe → reflect → re-plan    │
-│        │                                                                │
-│        ├── Auth sub-agent ─────┐                                        │
-│        ├── Network sub-agent ──┤  each runs its own MCP-driven SPL      │
-│        ├── Endpoint sub-agent ─┤                                        │
-│        └── Threat-Intel agent ─┘  (+ real external reputation APIs)     │
-│        │                                                                │
-│   Synthesizer → grounded incident report                               │
-│   Grounding store:  claim → (exact SPL, exact events) provenance        │
-│   Response engine:  pluggable REAL connectors (see below)              │
-│   Case memory:      persistent investigation store (SQLite/Postgres)    │
-└───────────────────────────────┬───────────────────────────────────────┘
-                                │  MCP protocol ONLY  (Bearer token, TLS)
-┌───────────────────────────────▼───────────────────────────────────────┐
-│  SPLUNK MCP SERVER   (Splunkbase app 7931 · :8089/services/mcp)         │
-│  tools: generate_spl · run_splunk_query · get_indexes · get_index_info  │
-│         · get_saved_searches · get_splunk_info · (saia_* if installed)   │
-└───────────────────────────────┬───────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  CLI / (web UI next)   check · query · investigate [--multi] [--respond] · eval │
+│  live token-by-token streaming of agent reasoning + SPL + results              │
+└───────────────────────────────┬────────────────────────────────────────────────┘
                                 │
-┌───────────────────────────────▼───────────────────────────────────────┐
-│  SPLUNK ENTERPRISE   (Docker · BOTS v3 dataset ingested)                │
-│  + KV-store blocklist · correlation searches · notable events          │
-└───────────────────────────────────────────────────────────────────────┘
-
-      Real external integrations (response + enrichment):
-      Threat-intel reputation APIs · Slack webhook · Jira / ticketing
+┌───────────────────────────────▼────────────────────────────────────────────────┐
+│  ARGUS ORCHESTRATOR  (Python · async)                                            │
+│                                                                                  │
+│   LLM provider abstraction (llm.py):                                             │
+│        Anthropic API  ──or──  AWS Bedrock (boto3 + Bedrock API key)              │
+│        model: claude-sonnet-4-6   · adaptive thinking · effort · streaming       │
+│                                                                                  │
+│   Single-agent:  plan → act → observe → re-plan   (agent.py)                     │
+│   Multi-agent (--multi):  ┌ auth ┐ ┌ network ┐ ┌ endpoint ┐ ┌ intel ┐           │
+│                           └──────┴─┴─────────┴─┴──────────┴─┴──────┘             │
+│                           run concurrently → synthesizer → one report            │
+│                                                                                  │
+│   Grounding store: every claim → (exact SPL, exact events)                       │
+│   Structured incident report: verdict · severity · timeline · MITRE · IOCs       │
+│   Eval harness: verdict accuracy · indicator recall · grounding precision        │
+└───────┬─────────────────────────────────────────────┬───────────────┬──────────┘
+        │ reads Splunk ONLY via MCP                     │ enrich        │ contain
+        │                                               ▼               ▼
+┌───────▼────────────────────────┐   ┌─────────────────────────┐  ┌────────────────┐
+│  SPLUNK MCP SERVER              │   │  THREAT INTEL           │  │  RESPONSE       │
+│  (Splunkbase 7931, :8089/       │   │  ip-api · AbuseIPDB ·   │  │  ENGINE         │
+│   services/mcp, bearer aud=mcp) │   │  VirusTotal             │  │  (connectors)   │
+│  tools: splunk_run_query,       │   │  (enrich_indicator tool)│  │                 │
+│  splunk_get_indexes/metadata…   │   └─────────────────────────┘  │  KV blocklist + │
+└───────┬────────────────────────┘                                 │  case store via │
+        │ JSON-RPC                                                  │  Splunk REST    │
+┌───────▼─────────────────────────────────────────────┐            │  Slack · Jira   │
+│  SPLUNK ENTERPRISE  (BOTS v3 · 2M+ events)           │◀───────────┤  (real, gated)  │
+│  argus_response app: KV collections + lookups +      │  enforced   └────────────────┘
+│  "Threat Blocklist Enforcement" correlation search   │  by search
+└──────────────────────────────────────────────────────┘
 ```
 
 ## Data flow (one investigation)
 
-1. An alert (real Splunk notable / saved-search result, or NL request) enters the orchestrator.
-2. The Lead Investigator plans hypotheses and dispatches specialist sub-agents.
-3. Each sub-agent calls the **Splunk MCP Server** to generate + run SPL, reads real
-   results, and decides its next query (pivot). All Splunk access is via MCP.
-4. Threat-Intel agent enriches observed IOCs via real external reputation APIs.
-5. The Synthesizer merges findings into a grounded report — every claim is linked to
-   the exact SPL executed and the exact events returned (stored in the grounding store).
-6. The Response engine executes a real action (KV-store blocklist enforced by a real
-   correlation search · notable creation · Slack/Jira ticket), gated by approval or auto-execute.
-7. The full case (queries, evidence, verdict, actions) is persisted to case memory.
+1. An alert (or NL request) enters the orchestrator.
+2. **Investigation reads Splunk only through the MCP Server**: the agent generates SPL,
+   runs `splunk_run_query`, reads real results, and pivots — looping until confident.
+   In `--multi`, four specialist sub-agents do this concurrently for their domain.
+3. The **threat-intel** tool enriches external IOCs via real reputation services.
+4. A synthesizer produces the **grounded** incident report — each timeline step linked
+   to the `tool_use` query that evidences it.
+5. With `--respond`, the **Response Engine** executes real containment: writes offending
+   indicators to a Splunk KV-store blocklist (REST), records a case, and posts Slack/Jira
+   tickets — gated by human approval (or `--auto`). A **correlation search** then enforces
+   the blocklist against live Splunk data.
+6. The **eval harness** scores accuracy, including verifying every reported IOC exists in
+   the data (grounding precision).
+
+> Investigation is 100% MCP-native. Containment writes go via the authenticated Splunk
+> KV-store REST API (the MCP server's safe-SPL allowlist is intentionally read-only).
 ```

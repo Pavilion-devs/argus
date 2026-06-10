@@ -178,5 +178,51 @@ def investigate(
     asyncio.run(run())
 
 
+@app.command(name="eval")
+def run_eval_cmd(
+    scenarios: str = typer.Option("", help="Comma-separated scenario ids (default: all)"),
+    max_turns: int = typer.Option(8, help="Max agent turns per scenario"),
+    out: str = typer.Option("eval/results.json", help="Where to write the JSON results"),
+) -> None:
+    """Run the evaluation harness over BOTS scenarios and report accuracy metrics."""
+    import pathlib
+
+    from .eval import run_eval
+
+    ids = [s.strip() for s in scenarios.split(",") if s.strip()] or None
+
+    async def run() -> None:
+        async with _client() as c:
+            console.print("[bold]Running Argus evaluation…[/bold] (this runs full investigations)")
+            data = await run_eval(c, scenario_ids=ids, max_turns=max_turns)
+
+            table = Table("Scenario", "Verdict", "OK", "Recall", "Grounding", "Q", "secs")
+            for r in data["results"]:
+                if "error" in r:
+                    table.add_row(r["id"], "[red]ERROR[/red]", "", "", "", "", str(r.get("duration_s", "")))
+                    continue
+                recall = "—" if r["indicator_recall"] is None else f"{r['indicator_recall']*100:.0f}%"
+                gp = "—" if r["grounding_precision"] is None else f"{r['grounding_precision']*100:.0f}% ({r['grounded']}/{r['iocs_checked']})"
+                table.add_row(
+                    r["id"], str(r["verdict"]),
+                    "[green]✓[/green]" if r["verdict_ok"] else "[red]✗[/red]",
+                    recall, gp, str(r["n_queries"]), str(r["duration_s"]),
+                )
+            console.print(table)
+
+            s = data["summary"]
+            console.print("\n[bold]── Aggregate ──[/bold]")
+            console.print(JSON(json.dumps(s)))
+            if s.get("ground_truth_missing"):
+                console.print(f"[yellow]⚠ ground-truth indicators not found in data: {s['ground_truth_missing']}[/yellow]")
+
+            path = pathlib.Path(out)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(data, indent=2))
+            console.print(f"\n[dim]results written to {out}[/dim]")
+
+    asyncio.run(run())
+
+
 if __name__ == "__main__":
     app()
