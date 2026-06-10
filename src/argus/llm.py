@@ -17,12 +17,81 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import threading
+from types import SimpleNamespace
 from typing import Any
 
 from anthropic import AsyncAnthropic
 from anthropic.types import Message
 
 from .config import Settings
+
+
+def _obj(d: Any) -> Any:
+    """Recursively expose a dict as attribute-access (for stream events)."""
+    if isinstance(d, dict):
+        return SimpleNamespace(**{k: _obj(v) for k, v in d.items()})
+    if isinstance(d, list):
+        return [_obj(v) for v in d]
+    return d
+
+
+class _StreamAccumulator:
+    """Reassembles a full Anthropic Message from streamed events (the same job the
+    anthropic SDK does internally), including tool-call input and thinking signatures."""
+
+    def __init__(self) -> None:
+        self.message: dict[str, Any] = {}
+        self._tool_json: dict[int, str] = {}
+
+    def handle(self, ev: dict[str, Any]) -> None:
+        t = ev.get("type")
+        if t == "message_start":
+            self.message = ev["message"]
+            self.message.setdefault("content", [])
+        elif t == "content_block_start":
+            idx = ev["index"]
+            block = dict(ev["content_block"])
+            if block.get("type") == "text":
+                block.setdefault("text", "")
+            elif block.get("type") == "thinking":
+                block.setdefault("thinking", "")
+                block.setdefault("signature", "")
+            elif block.get("type") == "tool_use":
+                block.setdefault("input", {})
+                self._tool_json[idx] = ""
+            content = self.message.setdefault("content", [])
+            while len(content) <= idx:
+                content.append({})
+            content[idx] = block
+        elif t == "content_block_delta":
+            idx = ev["index"]
+            d = ev.get("delta", {})
+            dt = d.get("type")
+            blk = self.message["content"][idx]
+            if dt == "text_delta":
+                blk["text"] = blk.get("text", "") + d.get("text", "")
+            elif dt == "thinking_delta":
+                blk["thinking"] = blk.get("thinking", "") + d.get("thinking", "")
+            elif dt == "signature_delta":
+                blk["signature"] = blk.get("signature", "") + d.get("signature", "")
+            elif dt == "input_json_delta":
+                self._tool_json[idx] = self._tool_json.get(idx, "") + d.get("partial_json", "")
+        elif t == "content_block_stop":
+            idx = ev["index"]
+            blk = self.message["content"][idx]
+            if blk.get("type") == "tool_use":
+                buf = self._tool_json.get(idx, "")
+                blk["input"] = json.loads(buf) if buf.strip() else {}
+        elif t == "message_delta":
+            d = ev.get("delta", {})
+            for k, v in d.items():
+                self.message[k] = v
+            if isinstance(ev.get("usage"), dict) and isinstance(self.message.get("usage"), dict):
+                self.message["usage"].update(ev["usage"])
+
+    def finalize(self) -> dict[str, Any]:
+        return self.message
 
 
 def make_llm_client(settings: Settings) -> Any:
@@ -136,18 +205,49 @@ class _Messages:
 
 
 class _BedrockStream:
-    """Async-context-manager shim. Bedrock invoke here is non-streaming, so we
-    fetch the full message on enter and expose it via get_final_message(); the
-    async iterator yields no deltas (token-level streaming is anthropic-only)."""
+    """Real token-by-token streaming over Bedrock's `invoke_model_with_response_stream`.
+
+    Bedrock streams the same Anthropic SSE event JSON inside each chunk, so we parse
+    those events, surface `content_block_delta`s to the async iterator, and accumulate
+    the full Message for `get_final_message()`. boto3's event stream is synchronous, so
+    a producer thread feeds an asyncio queue."""
+
+    _SENTINEL = object()
 
     def __init__(self, adapter: BedrockAdapter, kwargs: dict[str, Any]) -> None:
         self._a = adapter
         self._kwargs = kwargs
-        self._msg: Message | None = None
+        self._queue: asyncio.Queue[Any] = asyncio.Queue()
+        self._acc = _StreamAccumulator()
+        self._final: Message | None = None
+        self._thread: threading.Thread | None = None
 
     async def __aenter__(self) -> "_BedrockStream":
-        self._msg = await self._a.invoke(self._kwargs.pop("model"), self._kwargs)
+        model_id = self._kwargs.pop("model")
+        body = json.dumps(self._a._build_body(self._kwargs))
+        loop = asyncio.get_running_loop()
+        self._thread = threading.Thread(
+            target=self._produce, args=(model_id, body, loop), daemon=True
+        )
+        self._thread.start()
         return self
+
+    def _produce(self, model_id: str, body: str, loop: asyncio.AbstractEventLoop) -> None:
+        try:
+            resp = self._a._client.invoke_model_with_response_stream(
+                modelId=model_id, body=body,
+                contentType="application/json", accept="application/json",
+            )
+            for event in resp["body"]:
+                chunk = event.get("chunk") if isinstance(event, dict) else None
+                if not chunk:
+                    continue
+                data = json.loads(chunk["bytes"])
+                loop.call_soon_threadsafe(self._queue.put_nowait, data)
+        except Exception as exc:  # surface to the consumer
+            loop.call_soon_threadsafe(self._queue.put_nowait, {"__error__": str(exc)})
+        finally:
+            loop.call_soon_threadsafe(self._queue.put_nowait, self._SENTINEL)
 
     async def __aexit__(self, *exc: Any) -> bool:
         return False
@@ -156,8 +256,17 @@ class _BedrockStream:
         return self
 
     async def __anext__(self) -> Any:
-        raise StopAsyncIteration
+        while True:
+            item = await self._queue.get()
+            if item is self._SENTINEL:
+                raise StopAsyncIteration
+            if isinstance(item, dict) and "__error__" in item:
+                raise RuntimeError(f"Bedrock stream error: {item['__error__']}")
+            self._acc.handle(item)
+            if item.get("type") == "content_block_delta":
+                return _obj(item)
 
     async def get_final_message(self) -> Message:
-        assert self._msg is not None
-        return self._msg
+        if self._final is None:
+            self._final = Message.model_validate(self._acc.finalize())
+        return self._final
