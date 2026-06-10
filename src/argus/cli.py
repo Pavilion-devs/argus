@@ -178,6 +178,78 @@ def investigate(
     asyncio.run(run())
 
 
+@app.command()
+def cases() -> None:
+    """List the cases Argus has recorded (its case memory)."""
+    from .connectors import ResponseEngine
+
+    async def run() -> None:
+        async with _client() as c:
+            engine = ResponseEngine(get_settings(), c)
+            try:
+                rows = await engine.list_cases()
+            finally:
+                await engine.aclose()
+            if not rows:
+                console.print("[dim]no cases recorded yet[/dim]")
+                return
+            table = Table("Case", "Verdict", "Sev", "Conf", "Title", "Created")
+            for r in sorted(rows, key=lambda x: x.get("created_at", ""), reverse=True):
+                table.add_row(
+                    r.get("case_id", ""), r.get("verdict", ""), r.get("severity", ""),
+                    str(r.get("confidence", "")), (r.get("title", "") or "")[:50],
+                    (r.get("created_at", "") or "")[:19],
+                )
+            console.print(table)
+
+    asyncio.run(run())
+
+
+@app.command()
+def monitor(
+    search: str = typer.Option("", help="Detection SPL (default: AWS API-abuse detection)"),
+    key: str = typer.Option("sourceIPAddress", help="Field that identifies a distinct notable"),
+    iterations: int = typer.Option(1, help="Number of poll cycles"),
+    interval: float = typer.Option(0.0, help="Seconds between poll cycles"),
+    respond: bool = typer.Option(False, "--respond", help="Auto-contain each confirmed threat"),
+    max_turns: int = typer.Option(8, help="Max agent turns per notable"),
+) -> None:
+    """Continuously poll a detection and auto-investigate each new notable."""
+    from .monitor import DEFAULT_DETECTION, watch
+
+    async def run() -> None:
+        async with _client() as c:
+            console.print("[bold]── Argus continuous monitoring ──[/bold]")
+            async for ev in watch(
+                c, detection=search or DEFAULT_DETECTION, key=key,
+                interval=interval, max_iterations=iterations,
+                auto_respond=respond, max_turns=max_turns,
+            ):
+                kind = ev["type"]
+                if kind == "poll":
+                    console.print(
+                        f"[dim]poll #{ev['iteration']}: {ev['total']} detection hits, "
+                        f"{ev['new']} new[/dim]"
+                    )
+                elif kind == "notable":
+                    console.print(f"\n[bold red]🚨 NOTABLE[/bold red] {key}={ev['key']} "
+                                  f"[dim]{json.dumps(ev['row'])[:120]}[/dim]\n[dim]auto-investigating…[/dim]")
+                elif kind == "tool_call":
+                    console.print(f"  [cyan]→ {ev['name']}[/cyan] [dim]{json.dumps(ev['input'])[:120]}[/dim]")
+                elif kind == "report":
+                    r = ev["report"]
+                    console.print(f"  [bold]verdict:[/bold] {r['verdict']} · {r['severity']} "
+                                  f"(conf {r['confidence']}) — {r['title'][:70]}")
+                elif kind == "case_created":
+                    console.print(f"  [blue]📁 case {ev['case_id']} recorded[/blue]")
+                elif kind == "action_executed":
+                    res = ev["result"]
+                    tag = "[green]✓[/green]" if res.get("ok") else "[yellow]skip[/yellow]"
+                    console.print(f"  {tag} {ev['desc']}")
+
+    asyncio.run(run())
+
+
 @app.command(name="eval")
 def run_eval_cmd(
     scenarios: str = typer.Option("", help="Comma-separated scenario ids (default: all)"),
