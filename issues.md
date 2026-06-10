@@ -10,12 +10,15 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
 
 ## Investigation quality
 
-- 🟠 **AWS scenario recall stuck at 0.5.** The agent reliably finds the primary attacker
-  IP (`139.198.18.205`) and several others (`35.153.154.221`, `82.102.18.111`,
-  `209.107.196.112`) but consistently **misses the ground-truth indicator
-  `34.215.24.225`**. Either it's reachable only via a pivot the agent doesn't take, or the
-  curated ground-truth set is itself debatable. Action: trace where `34.215.24.225` lives
-  in `botsv3` and decide whether to improve the pivot or revise the ground truth.
+- ✅ **AWS scenario recall stuck at 0.5 — RESOLVED (root cause: poisoned ground truth, not the
+  agent).** Traced the miss of `34.215.24.225` through the pipeline: in the data it is
+  `arn:aws:iam::622676721278:user/splunk_access` — the **Splunk Add-on for AWS's own
+  data-collection account** (userAgent `Boto3/… Linux-aws`, 4040 benign read calls, **zero**
+  malicious actions, never touches `web_admin`). It was wrongly listed as an "attacker IP," so the
+  eval was docking the agent for **correctly not flagging benign infrastructure**. Fixed by
+  correcting the ground truth to the data-verified core IOCs (`web_admin` — the compromised
+  account — and `139.198.18.205` — the primary attacker IP). Lesson: "fixing the symptom" (nudging
+  the agent to surface `34.215.24.225`) would have *trained the over-calling we just removed.*
 - ✅ **Endpoint verdict variance — RESOLVED** (see [`problems.md`](problems.md) P2): Sysmon-XML
   extraction tradecraft + a confidence-gated continuation. Verified 3/3 true_positive.
 - 🟢 **Confidence-gated continuation adds latency to inconclusive runs.** When the first verdict
@@ -82,9 +85,16 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
   verdict_accuracy 1.0, grounding 0.989, 0 invalid MITRE). It carries a `per_scenario` pass-rate
   block. Note this is 3 samples/scenario — a strong signal, not a guarantee of 100% forever; run
   a higher `--repeat` for tighter confidence intervals.
-- 🟢 **Indicator recall is still the soft metric** (mean ~0.58): `aws_cred_abuse` stays at 50%
-  (misses `34.215.24.225`) and `endpoint_malware` recall varies run-to-run even when the verdict
-  is correct. Verdict + grounding are solid; IOC enumeration is the remaining gap (see top item).
+- 🟠 **Ground truth was existence-validated, not malice-validated (systemic).** `validate_ground_truth`
+  only confirms an indicator is *present* in `botsv3` — which let a benign IP (`34.215.24.225`,
+  splunk_access infra) masquerade as an attacker IOC and silently corrupt the recall metric (see the
+  resolved item under "Investigation quality"). Mitigated for now by curating + documenting each
+  indicator's malice rationale in `SCENARIOS` (eval.py). A stronger guard would surface each
+  indicator's data context (associated account / denied-action footprint) at validation time so a
+  benign one is obvious — deferred (heuristic, easy to get wrong; manual curation is the reliable fix).
+- 🟢 **Indicator recall** now measures the data-verified core IOCs. `endpoint_malware` recall can
+  still vary run-to-run even when the verdict is correct (IOC enumeration completeness); verdict +
+  grounding are the solid metrics.
 - 🟢 **`recall_memory` not counted in `n_queries`.** By design (it's a memory check, not a
   data query), but it means the eval "Q" column slightly understates total tool calls.
 - 🟢 **Eval default `max_turns` raised 8 → 12.** More representative of real `investigate`
