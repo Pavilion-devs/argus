@@ -22,9 +22,21 @@ contain the threat.
 - **Autonomous investigation** — a real plan → act → observe → re-plan loop. Claude
   dynamically writes SPL, runs it via the MCP server, reads the results, and decides
   the next query. No hardcoded query paths.
+- **Explicit hypothesis ledger** — the agent declares its leading theories up front and
+  marks each **confirmed/refuted** as evidence lands, so the reasoning is auditable and
+  it tests alternatives instead of confirming the first guess.
+- **Institutional memory** — before and during every investigation Argus recalls its own
+  past cases and active blocklist (`recall_memory`): a repeat-offender indicator surfaces
+  its prior verdict instantly, the way a veteran analyst would remember it.
 - **Grounded incident report** — verdict, severity, confidence, attack timeline,
-  MITRE ATT&CK techniques, affected entities, IOCs, and recommended actions — each
-  timeline step linked to the `tool_use` query that evidences it.
+  affected entities, IOCs, and recommended actions — each timeline step linked to the
+  `tool_use` query that evidences it.
+- **Validated MITRE ATT&CK + kill-chain** — every technique id is checked against a
+  pinned, real ATT&CK Enterprise catalog (v19.1, 858 techniques); hallucinated ids are
+  dropped, and the incident's tactics render as an ordered kill-chain.
+- **Composite risk score (0–100)** — a defensible, explainable score from verdict,
+  confidence, severity, kill-chain breadth, live threat-intel, and case-memory history —
+  for real triage/prioritization, not just a severity label.
 - **Multi-agent mode** (`--multi`) — four specialists (auth, network, endpoint,
   threat-intel) investigate concurrently and a synthesizer correlates them into one
   attack narrative.
@@ -34,8 +46,13 @@ contain the threat.
   KV-store blocklist that a **correlation search enforces against live data**, records
   a case, and (if configured) opens Slack/Jira tickets — with a human-approval gate
   (or `--auto`).
+- **Self-hardening loop (detection-as-code)** — after a confirmed true positive Argus
+  writes a new read-only SPL **detection** for the attack pattern and **installs it as a
+  real scheduled Splunk correlation search**, so the SOC auto-alerts if it recurs. Argus
+  doesn't just close the incident — it leaves behind the detection that catches the next one.
 - **Evaluation harness** (`argus eval`) — measures verdict accuracy, indicator recall,
-  and **grounding precision** (every reported IOC is verified to exist in the data).
+  **grounding precision** (every reported IOC is verified to exist in the data), and
+  **ATT&CK validity** (count of invalid technique ids — should be zero).
 - **Live token-by-token streaming** of the agent's reasoning.
 - **Provider-agnostic** — runs on the **Anthropic API** or **AWS Bedrock**.
 
@@ -120,22 +137,27 @@ uv run argus eval
 ```
 src/argus/
   mcp_client.py   # async JSON-RPC client for the Splunk MCP Server
-  agent.py        # single-agent + multi-agent investigation loops, response phase
-  connectors.py   # ResponseEngine: KV-store blocklist/cases, enforcement, Slack/Jira
+  agent.py        # single-agent + multi-agent loops, hypothesis ledger, response phase
+  connectors.py   # ResponseEngine: blocklist/cases, recall, enforcement, detection-as-code, Slack/Jira
+  enrich.py       # deterministic post-processing: MITRE validation + risk score + memory + kill-chain
+  mitre.py        # pinned MITRE ATT&CK Enterprise catalog (technique validation)
   threatintel.py  # real IP/domain/hash reputation enrichment
   llm.py          # provider-agnostic client (Anthropic API or AWS Bedrock via boto3)
   models.py       # the structured incident report
   prompts.py      # investigator / specialist / synthesis / response prompts
-  eval.py         # evaluation harness (verdict / recall / grounding precision)
-  cli.py          # check | query | tool | investigate | eval
-splunk/argus_response/   # companion Splunk app (KV collections + correlation search)
+  eval.py         # evaluation harness (verdict / recall / grounding precision / ATT&CK validity)
+  cli.py          # check | query | tool | investigate | cases | detections | monitor | mitre-sync | eval
+data/mitre/techniques.json   # pinned ATT&CK v19.1 catalog (committed, reproducible)
+splunk/argus_response/       # companion Splunk app (KV collections + correlation search)
 ```
 
 ## Status
 
-🚧 Active build for the hackathon. Engine (single- + multi-agent, grounded reports,
-real containment, threat-intel, streaming, eval) is complete and verified end-to-end.
-A streaming web UI is next. See [`PROJECT.md`](PROJECT.md) for the full plan.
+🚧 Active build for the hackathon. The engine is complete and verified end-to-end:
+single- + multi-agent investigation, hypothesis ledger, institutional memory (case
+recall), grounded reports, validated MITRE ATT&CK + kill-chain, composite risk scoring,
+real containment, the self-hardening detection-as-code loop, threat-intel, streaming,
+and the eval harness. A streaming web UI is next. See [`PROJECT.md`](PROJECT.md).
 
 ## License
 

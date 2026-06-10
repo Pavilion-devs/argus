@@ -5,6 +5,7 @@ MCP tools, capturing grounded evidence, and emitting a streaming event feed.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from typing import Any
@@ -13,6 +14,7 @@ import asyncio
 import uuid
 from collections.abc import Awaitable, Callable
 
+from . import enrich
 from .config import Settings, get_settings
 from .connectors import ResponseEngine
 from .llm import make_llm_client
@@ -45,12 +47,108 @@ ENRICH_TOOL = {
     },
 }
 
+RECALL_TOOL = {
+    "name": "recall_memory",
+    "description": "Search Argus's institutional memory — past investigation cases and the active "
+    "threat blocklist — for prior knowledge about the given indicators (IPs, users, domains, "
+    "hashes, hostnames). Use this EARLY in triage and whenever you discover a new indicator: if "
+    "Argus has investigated or blocked it before, that history (prior verdict, prior case, "
+    "already-blocked) is decisive context a fresh analyst would miss.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "indicators": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Concrete indicator values to look up (IPs, users, domains, hashes)",
+            },
+            "keywords": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Optional keywords to match against past case titles/summaries",
+            },
+        },
+        "required": ["indicators"],
+    },
+}
+
+HYPOTHESIS_TOOL = {
+    "name": "track_hypothesis",
+    "description": "Record or update a working hypothesis in your investigation ledger. Declare "
+    "your key hypotheses early (status=open), then update each to confirmed or refuted as your "
+    "queries produce evidence. This makes your reasoning explicit, auditable, and prevents you "
+    "from chasing one theory while ignoring alternatives.",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "description": "Short stable id, e.g. 'h1'"},
+            "statement": {"type": "string", "description": "The hypothesis in one sentence"},
+            "status": {"type": "string", "enum": ["open", "confirmed", "refuted"]},
+            "confidence": {"type": "number", "description": "0.0-1.0 current confidence"},
+            "evidence": {
+                "type": "string",
+                "description": "Brief note on the supporting/refuting evidence (tool_use ids, counts)",
+            },
+        },
+        "required": ["id", "statement", "status"],
+    },
+}
+
 SPECIALISTS: list[tuple[str, str]] = [
     ("auth", AUTH_SPECIALIST),
     ("network", NETWORK_SPECIALIST),
     ("endpoint", ENDPOINT_SPECIALIST),
     ("intel", INTEL_SPECIALIST),
 ]
+
+# Candidate-indicator extraction for pre-investigation auto-recall.
+_IP_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_AWSKEY_RE = re.compile(r"\bAKIA[0-9A-Z]{16}\b")
+_QUOTED_RE = re.compile(r"['\"]([^'\"]{3,40})['\"]")
+
+
+def extract_alert_indicators(alert: str) -> list[str]:
+    """Pull obvious indicators (IPs, AWS keys, quoted tokens) out of an alert for
+    a memory lookup before the investigation even starts."""
+    found: list[str] = []
+    for rx in (_IP_RE, _AWSKEY_RE):
+        found.extend(rx.findall(alert or ""))
+    found.extend(m.strip() for m in _QUOTED_RE.findall(alert or ""))
+    seen: set[str] = set()
+    out: list[str] = []
+    for v in found:
+        if v and v.lower() not in seen:
+            seen.add(v.lower())
+            out.append(v)
+    return out
+
+
+def _format_recall_for_prompt(rec: dict[str, Any]) -> str:
+    """Render a recall result as a compact prior-knowledge block for the model."""
+    lines: list[str] = []
+    for b in rec.get("blocklist_hits", []) or []:
+        lines.append(
+            f"- ALREADY BLOCKED: {b.get('indicator')} ({b.get('type')}) — "
+            f"{b.get('reason')} [case {b.get('case_id')}]"
+        )
+    for c in rec.get("related_cases", []) or []:
+        ov = ", ".join(c.get("overlap", []) or []) or ", ".join(c.get("keyword_match", []) or [])
+        lines.append(
+            f"- PRIOR CASE {c.get('case_id')}: {c.get('verdict')} / {c.get('severity')} — "
+            f"\"{(c.get('title') or '')[:80]}\" (shared: {ov})"
+        )
+    return "\n".join(lines)
+
+
+def _format_hypotheses(hypotheses: dict[str, dict[str, Any]]) -> str:
+    if not hypotheses:
+        return ""
+    return "\n".join(
+        f"- [{h.get('status', 'open')}] {h.get('statement', '')}"
+        + (f" (conf {h.get('confidence')})" if h.get("confidence") is not None else "")
+        + (f" — {h.get('evidence')}" if h.get("evidence") else "")
+        for h in hypotheses.values()
+    )
 
 # An approver decides whether a proposed response action may execute.
 Approver = Callable[[str, dict[str, Any]], Awaitable[bool]]
@@ -93,6 +191,39 @@ RESPONSE_TOOLS = [
                 "description": {"type": "string"},
             },
             "required": ["summary", "description"],
+        },
+    },
+    {
+        "name": "deploy_detection",
+        "description": "Deploy a NEW Splunk scheduled detection (correlation search) that will "
+        "catch recurrence of this attack pattern going forward. Use after a confirmed true "
+        "positive: turn what you found into a durable, READ-ONLY SPL detection so Splunk alerts "
+        "automatically if it happens again. This hardens the SOC — Argus doesn't just close the "
+        "incident, it writes the detection that catches the next one.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Short detection name, e.g. 'AWS access-denied burst by source IP'",
+                },
+                "description": {"type": "string", "description": "What it detects and why it matters"},
+                "search": {
+                    "type": "string",
+                    "description": "Read-only SPL for the detection (search/stats/eval/where/etc — "
+                    "NO data-modifying commands). It runs on a schedule over a rolling window, so "
+                    "write it to match the attack BEHAVIOR, not the specific timestamps you saw. "
+                    "Target the same index and sourcetypes you investigated (e.g. index=botsv3 "
+                    "sourcetype=aws:cloudtrail) so the detection is immediately enforceable on this "
+                    "Splunk instance.",
+                },
+                "cron_schedule": {
+                    "type": "string",
+                    "description": "Cron schedule, e.g. '*/10 * * * *' (every 10 minutes)",
+                },
+                "rationale": {"type": "string", "description": "Why this detection follows from the incident"},
+            },
+            "required": ["name", "search", "rationale"],
         },
     },
     {
@@ -165,11 +296,13 @@ class Investigator:
     mcp: SplunkMCPClient
     settings: Settings = field(default_factory=get_settings)
     evidence: list[Evidence] = field(default_factory=list)
+    hypotheses: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.client = make_llm_client(self.settings)
         self.model = self.settings.resolved_model
         self._ti: ThreatIntel | None = None
+        self.recalls: list[dict[str, Any]] = []
 
     def _threatintel(self) -> ThreatIntel:
         if self._ti is None:
@@ -177,8 +310,22 @@ class Investigator:
         return self._ti
 
     def _tools(self) -> list[dict[str, Any]]:
-        """Full toolset offered to the model: discovered MCP tools + enrichment."""
-        return mcp_tools_to_anthropic(self.mcp) + [ENRICH_TOOL]
+        """Full toolset offered to the model: discovered MCP tools + enrichment,
+        institutional-memory recall, and the hypothesis ledger."""
+        return mcp_tools_to_anthropic(self.mcp) + [ENRICH_TOOL, RECALL_TOOL, HYPOTHESIS_TOOL]
+
+    def _evidence_pairs(self) -> list[tuple[str, str]]:
+        return [(e.tool, e.result_text) for e in self.evidence if not e.is_error]
+
+    async def _recall(self, indicators: list[str], keywords: list[str] | None = None) -> dict[str, Any]:
+        """Look up indicators in Argus's case memory + blocklist (short-lived engine)."""
+        engine = ResponseEngine(self.settings, self.mcp)
+        try:
+            rec = await engine.recall(indicators, keywords)
+        finally:
+            await engine.aclose()
+        self.recalls.append(rec)
+        return rec
 
     async def _agent_loop(
         self,
@@ -240,6 +387,17 @@ class Investigator:
                         "text": text,
                         "agent": agent,
                     }
+                    if block.name == "track_hypothesis":
+                        yield {
+                            "type": "hypothesis",
+                            "hypothesis": self.hypotheses.get(str((block.input or {}).get("id", ""))),
+                            "agent": agent,
+                        }
+                    elif block.name == "recall_memory" and not is_error:
+                        try:
+                            yield {"type": "recall", "recall": json.loads(text), "agent": agent}
+                        except Exception:
+                            pass
                     tool_results.append(
                         {
                             "type": "tool_result",
@@ -268,13 +426,29 @@ class Investigator:
     async def investigate(
         self, alert: str, *, max_turns: int = MAX_TURNS
     ) -> AsyncIterator[dict[str, Any]]:
-        """Single-agent investigation: yields events then a structured report."""
+        """Single-agent investigation: yields events then a grounded, enriched report."""
+        # Pre-investigation auto-recall: if the alert already names an indicator
+        # Argus has seen, surface that history before the loop even starts.
+        prior_block = ""
+        seeds = extract_alert_indicators(alert)
+        if seeds:
+            rec = await self._recall(seeds, [])
+            if rec.get("related_cases") or rec.get("blocklist_hits"):
+                yield {"type": "recall", "recall": rec, "agent": ""}
+                prior_block = _format_recall_for_prompt(rec)
+
         initial = (
             "Investigate the following security alert. Work autonomously, end to end, using the "
             "Splunk MCP tools (and enrich_indicator for external IPs/domains/hashes). The data is "
             'in the `botsv3` index and is historical — always search with earliest_time="0".'
             "\n\nALERT:\n" + alert
         )
+        if prior_block:
+            initial += (
+                "\n\n## Prior knowledge from Argus case memory\n" + prior_block
+                + "\nTreat these as leads to confirm against live data, not conclusions."
+            )
+
         final_text = ""
         async for ev in self._agent_loop(INVESTIGATOR_SYSTEM, initial, max_turns=max_turns):
             if ev["type"] == "_final":
@@ -283,7 +457,13 @@ class Investigator:
                 yield ev
 
         report = await self._synthesize(final_text)
-        yield {"type": "report", "report": report.model_dump()}
+        rep = enrich.enrich_report(
+            report.model_dump(),
+            evidence_pairs=self._evidence_pairs(),
+            hypotheses=list(self.hypotheses.values()),
+            recalls=self.recalls,
+        )
+        yield {"type": "report", "report": rep}
         yield {"type": "done"}
 
     async def respond(
@@ -384,6 +564,15 @@ class Investigator:
                 result = await engine.create_ticket(
                     args.get("summary", ""), args.get("description", "")
                 )
+            elif name == "deploy_detection":
+                result = await engine.deploy_detection(
+                    args.get("name", "Argus auto-detection"),
+                    args.get("search", ""),
+                    description=args.get("description", ""),
+                    cron_schedule=args.get("cron_schedule", "*/10 * * * *"),
+                    rationale=args.get("rationale", ""),
+                    case_id=case_id,
+                )
             else:
                 result = {"ok": False, "error": f"unknown action {name}"}
         except Exception as exc:
@@ -401,6 +590,8 @@ class Investigator:
             return f"NOTIFY Slack: {args.get('message', '')[:80]}"
         if name == "create_ticket":
             return f"TICKET: {args.get('summary', '')[:80]}"
+        if name == "deploy_detection":
+            return f"DEPLOY DETECTION: {args.get('name', '')[:70]} [{args.get('cron_schedule', '*/10 * * * *')}]"
         return name
 
     async def _run_tool(
@@ -408,12 +599,29 @@ class Investigator:
     ) -> tuple[str, bool]:
         try:
             if name == "enrich_indicator":
-                enrich = await self._threatintel().enrich(
+                enr = await self._threatintel().enrich(
                     arguments.get("indicator", ""), arguments.get("indicator_type", "ip")
                 )
-                text = json.dumps(enrich)
+                text = json.dumps(enr)
                 self.evidence.append(Evidence(tool_use_id, name, arguments, text, False))
                 return text, False
+            if name == "recall_memory":
+                rec = await self._recall(
+                    arguments.get("indicators", []) or [], arguments.get("keywords") or []
+                )
+                # Recall is a memory check, not a data query — kept out of `evidence`
+                # so it never inflates the SPL/query counts, but tracked for enrichment.
+                return json.dumps(rec), False
+            if name == "track_hypothesis":
+                hid = str(arguments.get("id") or f"h{len(self.hypotheses) + 1}")
+                self.hypotheses[hid] = {
+                    "id": hid,
+                    "statement": arguments.get("statement", ""),
+                    "status": arguments.get("status", "open"),
+                    "confidence": arguments.get("confidence"),
+                    "evidence": arguments.get("evidence", ""),
+                }
+                return json.dumps({"ok": True, "ledger_size": len(self.hypotheses)}), False
             result = await self.mcp.call_tool(name, arguments)
             text = self.mcp.text_content(result)
             self.evidence.append(Evidence(tool_use_id, name, arguments, text, False))
@@ -435,11 +643,21 @@ class Investigator:
             for e in self.evidence
             if not e.is_error
         )[:8000]
+        hyp_block = _format_hypotheses(self.hypotheses)
+        recall_block = (
+            _format_recall_for_prompt(enrich._merge_recall(self.recalls)) if self.recalls else ""
+        )
+        extra = ""
+        if hyp_block:
+            extra += f"\n## Hypothesis ledger (your confirmed/refuted theories)\n{hyp_block}\n"
+        if recall_block:
+            extra += f"\n## Prior knowledge from case memory (factor into severity/verdict)\n{recall_block}\n"
         content = (
             "You have completed the investigation below. Convert it into the structured "
             "incident report.\n\n## Your final analysis\n"
             f"{narrative or '(no narrative produced)'}\n\n"
-            f"## Queries you ran (tool_use_id: tool args)\n{evidence_index}\n\n"
+            f"## Queries you ran (tool_use_id: tool args)\n{evidence_index}\n"
+            f"{extra}\n"
             + SYNTHESIS_PROMPT
         )
         result = await self.client.messages.parse(
@@ -464,12 +682,29 @@ class MultiAgentInvestigator:
         self.client = make_llm_client(self.settings)
         self.model = self.settings.resolved_model
         self.evidence: list[Evidence] = []
+        self.hypotheses: dict[str, dict[str, Any]] = {}
+        self.recalls: list[dict[str, Any]] = []
 
     async def investigate(
         self, alert: str, *, max_turns_each: int = 5
     ) -> AsyncIterator[dict[str, Any]]:
         queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
         findings: dict[str, str] = {}
+
+        # Orchestrator-level auto-recall: one memory lookup seeds every specialist.
+        prior_block = ""
+        recall_event: dict[str, Any] | None = None
+        seeds = extract_alert_indicators(alert)
+        if seeds:
+            engine = ResponseEngine(self.settings, self.mcp)
+            try:
+                rec = await engine.recall(seeds, [])
+            finally:
+                await engine.aclose()
+            if rec.get("related_cases") or rec.get("blocklist_hits"):
+                self.recalls.append(rec)
+                prior_block = _format_recall_for_prompt(rec)
+                recall_event = {"type": "recall", "recall": rec, "agent": ""}
 
         async def run_specialist(name: str, system: str) -> None:
             sub = Investigator(self.mcp, self.settings)
@@ -478,6 +713,8 @@ class MultiAgentInvestigator:
                 'against the botsv3 index (historical — always earliest_time="0"). Report concrete '
                 "findings with evidence.\n\nALERT:\n" + alert
             )
+            if prior_block:
+                initial += "\n\n## Prior knowledge from Argus case memory\n" + prior_block
             await queue.put({"type": "specialist_started", "agent": name})
             final = ""
             async for ev in sub._agent_loop(system, initial, max_turns=max_turns_each, agent=name):
@@ -487,10 +724,15 @@ class MultiAgentInvestigator:
                     await queue.put(ev)
             findings[name] = final
             self.evidence.extend(sub.evidence)
+            self.recalls.extend(sub.recalls)
+            for hid, h in sub.hypotheses.items():
+                self.hypotheses[f"{name}:{hid}"] = h
             await queue.put({"type": "specialist_done", "agent": name, "findings": final})
 
         tasks = [asyncio.create_task(run_specialist(n, s)) for n, s in SPECIALISTS]
         yield {"type": "multi_start", "agents": [n for n, _ in SPECIALISTS]}
+        if recall_event:
+            yield recall_event
 
         async def _waiter() -> None:
             await asyncio.gather(*tasks)
@@ -505,7 +747,13 @@ class MultiAgentInvestigator:
         await waiter
 
         report = await self._synthesize_multi(alert, findings)
-        yield {"type": "report", "report": report.model_dump()}
+        rep = enrich.enrich_report(
+            report.model_dump(),
+            evidence_pairs=[(e.tool, e.result_text) for e in self.evidence if not e.is_error],
+            hypotheses=list(self.hypotheses.values()),
+            recalls=self.recalls,
+        )
+        yield {"type": "report", "report": rep}
         yield {"type": "done"}
 
     async def _synthesize_multi(
@@ -520,9 +768,19 @@ class MultiAgentInvestigator:
             for e in self.evidence
             if not e.is_error
         )[:8000]
+        hyp_block = _format_hypotheses(self.hypotheses)
+        recall_block = (
+            _format_recall_for_prompt(enrich._merge_recall(self.recalls)) if self.recalls else ""
+        )
+        extra = ""
+        if hyp_block:
+            extra += f"\n## Hypotheses tracked across specialists\n{hyp_block}\n"
+        if recall_block:
+            extra += f"\n## Prior knowledge from case memory (factor into severity/verdict)\n{recall_block}\n"
         content = (
             f"ALERT:\n{alert}\n\n{sections}\n\n"
-            f"## All queries run across specialists (tool_use_id: tool args)\n{evidence_index}\n\n"
+            f"## All queries run across specialists (tool_use_id: tool args)\n{evidence_index}\n"
+            f"{extra}\n"
             + SYNTHESIS_PROMPT
         )
         result = await self.client.messages.parse(

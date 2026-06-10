@@ -1,11 +1,12 @@
 {
   "summary": {
     "scenarios": 3,
-    "verdict_accuracy": 1.0,
-    "mean_indicator_recall": 0.75,
+    "verdict_accuracy": 0.667,
+    "mean_indicator_recall": 0.25,
     "mean_grounding_precision": 1.0,
-    "mean_queries": 18.7,
-    "mean_duration_s": 126.9,
+    "invalid_mitre_techniques": 0,
+    "mean_queries": 24.0,
+    "mean_duration_s": 193.0,
     "model": "global.anthropic.claude-sonnet-4-6",
     "provider": "bedrock",
     "ground_truth_missing": {}
@@ -19,7 +20,19 @@
       ],
       "verdict_ok": true,
       "severity": "critical",
-      "confidence": 0.95,
+      "confidence": 0.97,
+      "risk_score": 100,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Initial Access",
+        "Persistence",
+        "Privilege Escalation",
+        "Stealth",
+        "Discovery",
+        "Collection",
+        "Impact"
+      ],
+      "mitre_invalid": [],
       "indicator_recall": 0.5,
       "matched_indicators": [
         "139.198.18.205"
@@ -28,58 +41,70 @@
         "139.198.18.205",
         "34.215.24.225"
       ],
+      "grounding_precision": 1.0,
+      "grounded": 8,
+      "iocs_checked": 8,
+      "ungrounded_iocs": [],
+      "n_queries": 27,
+      "duration_s": 203.5,
+      "ioc_count": 8
+    },
+    {
+      "id": "endpoint_malware",
+      "verdict": "inconclusive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": false,
+      "severity": "medium",
+      "confidence": 0.35,
+      "risk_score": 29,
+      "risk_band": "low",
+      "kill_chain": [
+        "Stealth"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 0.0,
+      "matched_indicators": [],
+      "expected_indicators": [
+        "iexeplorer.exe"
+      ],
       "grounding_precision": null,
       "grounded": 0,
       "iocs_checked": 0,
       "ungrounded_iocs": [],
-      "n_queries": 25,
-      "duration_s": 152.8,
-      "ioc_count": 18
-    },
-    {
-      "id": "endpoint_malware",
-      "verdict": "true_positive",
-      "expected_verdict": [
-        "true_positive"
-      ],
-      "verdict_ok": true,
-      "severity": "critical",
-      "confidence": 0.92,
-      "indicator_recall": 1.0,
-      "matched_indicators": [
-        "iexeplorer.exe"
-      ],
-      "expected_indicators": [
-        "iexeplorer.exe"
-      ],
-      "grounding_precision": 1.0,
-      "grounded": 1,
-      "iocs_checked": 1,
-      "ungrounded_iocs": [],
-      "n_queries": 15,
-      "duration_s": 118.0,
-      "ioc_count": 5
+      "n_queries": 21,
+      "duration_s": 181.6,
+      "ioc_count": 1
     },
     {
       "id": "benign_dns_control",
-      "verdict": "false_positive",
+      "verdict": "inconclusive",
       "expected_verdict": [
         "false_positive",
         "inconclusive"
       ],
       "verdict_ok": true,
-      "severity": "informational",
-      "confidence": 0.72,
+      "severity": "medium",
+      "confidence": 0.35,
+      "risk_score": 38,
+      "risk_band": "medium",
+      "kill_chain": [
+        "Resource Development",
+        "Discovery",
+        "Command and Control"
+      ],
+      "mitre_invalid": [],
       "indicator_recall": null,
       "matched_indicators": [],
       "expected_indicators": [],
-      "grounding_precision": null,
-      "grounded": 0,
-      "iocs_checked": 0,
+      "grounding_precision": 1.0,
+      "grounded": 8,
+      "iocs_checked": 8,
       "ungrounded_iocs": [],
-      "n_queries": 16,
-      "duration_s": 109.8,
-      "ioc_count": 6
+      "n_queries": 24,
+      "duration_s": 193.8,
+      "ioc_count": 8
     }
   ]
 }
