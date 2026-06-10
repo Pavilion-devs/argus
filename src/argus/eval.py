@@ -34,6 +34,13 @@ class Scenario:
     expected_indicators: list[str] = field(default_factory=list)
 
 
+# Ground-truth indicators MUST be verified MALICIOUS against the data, not merely
+# present. Each must be backed by an attack footprint (denied/abusive actions tied to
+# the incident) — existence alone is NOT enough. Cautionary example: `34.215.24.225`
+# was originally listed here as an "attacker IP"; investigation showed it is actually
+# `arn:aws:iam::...:user/splunk_access` — the Splunk Add-on for AWS's own data-collection
+# account (4040 benign read calls, zero malicious actions, never touched web_admin). It
+# was scoring the agent DOWN for correctly NOT flagging benign infrastructure. Removed.
 SCENARIOS: list[Scenario] = [
     Scenario(
         id="aws_cred_abuse",
@@ -43,7 +50,12 @@ SCENARIOS: list[Scenario] = [
             "source IPs, and determine what actions they attempted."
         ),
         expected_verdict=["true_positive"],
-        expected_indicators=["139.198.18.205", "34.215.24.225"],
+        # web_admin: the compromised IAM account — the central IOC of this incident (637
+        #   abusive calls incl. RunInstances cryptomining, all denied). 139.198.18.205:
+        #   the primary attacker source IP (China/Yunify) driving those calls. Both are
+        #   data-verified malicious. (Real secondary attacker IPs also present but not
+        #   required for core recall: 35.153.154.221, 82.102.18.111, 209.107.196.112.)
+        expected_indicators=["web_admin", "139.198.18.205"],
     ),
     Scenario(
         id="endpoint_malware",
@@ -52,6 +64,9 @@ SCENARIOS: list[Scenario] = [
             "Windows host. Investigate for malware, identify the file and the affected host."
         ),
         expected_verdict=["true_positive"],
+        # iexeplorer.exe: masquerading binary (typosquat of iexplore.exe) from a
+        #   user-writable temp path; Sysmon EventID 1 shows a reverse shell + Apache
+        #   Struts exploit + /etc/passwd read. Data-verified malicious.
         expected_indicators=["iexeplorer.exe"],
     ),
     Scenario(
@@ -108,7 +123,12 @@ async def _count_in_botsv3(mcp: SplunkMCPClient, term: str) -> int:
 
 
 async def validate_ground_truth(mcp: SplunkMCPClient) -> dict[str, list[str]]:
-    """Confirm each expected indicator actually exists in botsv3 (self-validation)."""
+    """Confirm each expected indicator actually exists in botsv3 (self-validation).
+
+    NOTE: existence is necessary but NOT sufficient — an indicator can exist and still be
+    benign (see the `34.215.24.225` / splunk_access cautionary note at SCENARIOS). Ground
+    truth must be curated from indicators verified MALICIOUS in the data; this check only
+    guards against scoring an indicator that isn't in the dataset at all."""
     missing: dict[str, list[str]] = {}
     for sc in SCENARIOS:
         for ind in sc.expected_indicators:
