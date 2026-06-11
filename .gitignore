@@ -16,9 +16,12 @@ venv/
 
 # Node / web
 node_modules/
+.next/
 web/.next/
 web/dist/
 web/build/
+# stray Next.js build output (the app lives in web/)
+/fab/
 
 # Splunk data & apps (large / licensed downloads — not committed)
 splunk/apps/*.tgz
