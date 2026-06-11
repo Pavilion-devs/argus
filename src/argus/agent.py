@@ -170,13 +170,24 @@ async def reconcile_hypotheses(
     listing = "\n".join(f"- {hid}: {h.get('statement', '')}" for hid, h in open_ids.items())
     content = (
         f"An investigation just concluded with verdict: {verdict}.\n\n"
-        f"## Final analysis\n{(basis or '(none)')[:6000]}\n\n"
+        f"## Final analysis (authoritative — the settled conclusion of the investigation)\n"
+        f"{(basis or '(none)')[:6000]}\n\n"
         f"## Working hypotheses still marked OPEN\n{listing}\n\n"
-        "Resolve EACH hypothesis strictly from what the investigation found: mark it "
-        "`confirmed` if the evidence supports it, `refuted` if the evidence contradicts it, or "
-        "`open` ONLY if the data genuinely could not settle it. Give a final confidence "
-        "(0.0-1.0) and a one-line evidence note citing what settled it. Return exactly one "
-        "resolution per hypothesis id listed above (use the same ids)."
+        "Resolve EACH hypothesis against the final verdict and analysis above. They are the "
+        "investigation's settled conclusion, so treat them as authoritative evidence — if the "
+        "analysis already implies the answer, resolve it; do not hedge:\n"
+        "- `confirmed`: the verdict/analysis supports the hypothesis. A true_positive verdict "
+        "confirms the hypotheses describing that malicious activity (even if a given detail was "
+        "established indirectly or as part of the broader attack narrative).\n"
+        "- `refuted`: the verdict/analysis contradicts it — e.g. a true_positive refutes a "
+        "competing 'this is benign/legitimate' hypothesis; a false_positive refutes the "
+        "malicious ones.\n"
+        "- `open`: ONLY when the hypothesis turns on a specific question the analysis genuinely "
+        "never addressed AND the verdict does not bear on it. Do NOT leave it open merely "
+        "because it wasn't the investigation's main focus.\n"
+        "Give a final confidence (0.0-1.0 — a confident verdict warrants a confident resolution "
+        "for the hypotheses it settles) and a one-line evidence note citing what settled it. "
+        "Return exactly one resolution per hypothesis id listed above (use the same ids)."
     )
     try:
         result = await client.messages.parse(
