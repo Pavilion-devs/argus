@@ -1,14 +1,14 @@
 {
   "summary": {
-    "scenarios": 3,
+    "scenarios": 6,
     "repeat": 3,
-    "total_runs": 9,
+    "total_runs": 18,
     "verdict_accuracy": 1.0,
-    "mean_indicator_recall": 1.0,
-    "mean_grounding_precision": 1.0,
+    "mean_indicator_recall": 0.917,
+    "mean_grounding_precision": 0.987,
     "invalid_mitre_techniques": 0,
-    "mean_queries": 22.1,
-    "mean_duration_s": 201.5,
+    "mean_queries": 22.4,
+    "mean_duration_s": 189.2,
     "model": "global.anthropic.claude-sonnet-4-6",
     "provider": "bedrock",
     "ground_truth_missing": {}
@@ -40,12 +40,58 @@
       "expected_verdict": [
         "true_positive"
       ],
-      "mean_indicator_recall": 1.0,
+      "mean_indicator_recall": 0.667,
       "mean_grounding_precision": 1.0,
       "invalid_mitre": 0
     },
     {
       "id": "benign_dns_control",
+      "runs": 3,
+      "verdict_pass_rate": 1.0,
+      "passes": 3,
+      "verdict_distribution": {
+        "false_positive": 3
+      },
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "mean_indicator_recall": null,
+      "mean_grounding_precision": 1.0,
+      "invalid_mitre": 0
+    },
+    {
+      "id": "s3_public_exposure",
+      "runs": 3,
+      "verdict_pass_rate": 1.0,
+      "passes": 3,
+      "verdict_distribution": {
+        "true_positive": 3
+      },
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "mean_indicator_recall": 1.0,
+      "mean_grounding_precision": 1.0,
+      "invalid_mitre": 0
+    },
+    {
+      "id": "coinminer_cryptojacking",
+      "runs": 3,
+      "verdict_pass_rate": 1.0,
+      "passes": 3,
+      "verdict_distribution": {
+        "true_positive": 3
+      },
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "mean_indicator_recall": 1.0,
+      "mean_grounding_precision": 0.921,
+      "invalid_mitre": 0
+    },
+    {
+      "id": "benign_aws_recon_control",
       "runs": 3,
       "verdict_pass_rate": 1.0,
       "passes": 3,
@@ -78,46 +124,6 @@
         "Persistence",
         "Privilege Escalation",
         "Stealth",
-        "Credential Access",
-        "Discovery",
-        "Impact"
-      ],
-      "mitre_invalid": [],
-      "indicator_recall": 1.0,
-      "matched_indicators": [
-        "web_admin",
-        "139.198.18.205"
-      ],
-      "expected_indicators": [
-        "web_admin",
-        "139.198.18.205"
-      ],
-      "grounding_precision": 1.0,
-      "grounded": 7,
-      "iocs_checked": 7,
-      "ungrounded_iocs": [],
-      "n_queries": 27,
-      "duration_s": 173.2,
-      "ioc_count": 7,
-      "run": 1
-    },
-    {
-      "id": "aws_cred_abuse",
-      "verdict": "true_positive",
-      "expected_verdict": [
-        "true_positive"
-      ],
-      "verdict_ok": true,
-      "severity": "critical",
-      "confidence": 0.95,
-      "risk_score": 100,
-      "risk_band": "critical",
-      "kill_chain": [
-        "Initial Access",
-        "Persistence",
-        "Privilege Escalation",
-        "Stealth",
-        "Credential Access",
         "Discovery",
         "Impact"
       ],
@@ -135,8 +141,47 @@
       "grounded": 8,
       "iocs_checked": 8,
       "ungrounded_iocs": [],
-      "n_queries": 23,
-      "duration_s": 165.6,
+      "n_queries": 33,
+      "duration_s": 189.9,
+      "ioc_count": 8,
+      "run": 1
+    },
+    {
+      "id": "aws_cred_abuse",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.97,
+      "risk_score": 100,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Initial Access",
+        "Persistence",
+        "Privilege Escalation",
+        "Stealth",
+        "Discovery",
+        "Exfiltration",
+        "Impact"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "web_admin",
+        "139.198.18.205"
+      ],
+      "expected_indicators": [
+        "web_admin",
+        "139.198.18.205"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 7,
+      "iocs_checked": 7,
+      "ungrounded_iocs": [],
+      "n_queries": 26,
+      "duration_s": 179.1,
       "ioc_count": 8,
       "run": 2
     },
@@ -148,7 +193,7 @@
       ],
       "verdict_ok": true,
       "severity": "critical",
-      "confidence": 0.98,
+      "confidence": 0.97,
       "risk_score": 100,
       "risk_band": "critical",
       "kill_chain": [
@@ -157,6 +202,7 @@
         "Privilege Escalation",
         "Stealth",
         "Discovery",
+        "Collection",
         "Impact"
       ],
       "mitre_invalid": [],
@@ -170,12 +216,12 @@
         "139.198.18.205"
       ],
       "grounding_precision": 1.0,
-      "grounded": 7,
-      "iocs_checked": 7,
+      "grounded": 8,
+      "iocs_checked": 8,
       "ungrounded_iocs": [],
-      "n_queries": 33,
-      "duration_s": 215.7,
-      "ioc_count": 7,
+      "n_queries": 28,
+      "duration_s": 206.1,
+      "ioc_count": 8,
       "run": 3
     },
     {
@@ -186,13 +232,11 @@
       ],
       "verdict_ok": true,
       "severity": "high",
-      "confidence": 0.92,
-      "risk_score": 82,
-      "risk_band": "critical",
+      "confidence": 0.95,
+      "risk_score": 73,
+      "risk_band": "high",
       "kill_chain": [
-        "Initial Access",
-        "Persistence",
-        "Privilege Escalation",
+        "Execution",
         "Stealth",
         "Command and Control"
       ],
@@ -205,12 +249,12 @@
         "iexeplorer.exe"
       ],
       "grounding_precision": 1.0,
-      "grounded": 6,
-      "iocs_checked": 6,
+      "grounded": 4,
+      "iocs_checked": 4,
       "ungrounded_iocs": [],
-      "n_queries": 18,
-      "duration_s": 203.8,
-      "ioc_count": 6,
+      "n_queries": 17,
+      "duration_s": 169.8,
+      "ioc_count": 5,
       "run": 1
     },
     {
@@ -220,34 +264,30 @@
         "true_positive"
       ],
       "verdict_ok": true,
-      "severity": "critical",
-      "confidence": 0.97,
-      "risk_score": 93,
-      "risk_band": "critical",
+      "severity": "high",
+      "confidence": 0.92,
+      "risk_score": 79,
+      "risk_band": "high",
       "kill_chain": [
-        "Initial Access",
         "Execution",
         "Persistence",
         "Privilege Escalation",
         "Stealth",
-        "Discovery",
         "Command and Control"
       ],
       "mitre_invalid": [],
-      "indicator_recall": 1.0,
-      "matched_indicators": [
-        "iexeplorer.exe"
-      ],
+      "indicator_recall": 0.0,
+      "matched_indicators": [],
       "expected_indicators": [
         "iexeplorer.exe"
       ],
       "grounding_precision": 1.0,
-      "grounded": 8,
-      "iocs_checked": 8,
+      "grounded": 4,
+      "iocs_checked": 4,
       "ungrounded_iocs": [],
-      "n_queries": 21,
-      "duration_s": 217.4,
-      "ioc_count": 10,
+      "n_queries": 27,
+      "duration_s": 214.3,
+      "ioc_count": 5,
       "run": 2
     },
     {
@@ -258,12 +298,13 @@
       ],
       "verdict_ok": true,
       "severity": "critical",
-      "confidence": 0.87,
-      "risk_score": 82,
+      "confidence": 0.97,
+      "risk_score": 90,
       "risk_band": "critical",
       "kill_chain": [
-        "Initial Access",
         "Execution",
+        "Persistence",
+        "Privilege Escalation",
         "Stealth",
         "Command and Control"
       ],
@@ -280,8 +321,8 @@
       "iocs_checked": 6,
       "ungrounded_iocs": [],
       "n_queries": 20,
-      "duration_s": 247.4,
-      "ioc_count": 7,
+      "duration_s": 246.2,
+      "ioc_count": 8,
       "run": 3
     },
     {
@@ -293,61 +334,7 @@
       ],
       "verdict_ok": true,
       "severity": "informational",
-      "confidence": 0.98,
-      "risk_score": 15,
-      "risk_band": "low",
-      "kill_chain": [],
-      "mitre_invalid": [],
-      "indicator_recall": null,
-      "matched_indicators": [],
-      "expected_indicators": [],
-      "grounding_precision": 1.0,
-      "grounded": 4,
-      "iocs_checked": 4,
-      "ungrounded_iocs": [],
-      "n_queries": 16,
-      "duration_s": 183.4,
-      "ioc_count": 5,
-      "run": 1
-    },
-    {
-      "id": "benign_dns_control",
-      "verdict": "false_positive",
-      "expected_verdict": [
-        "false_positive",
-        "inconclusive"
-      ],
-      "verdict_ok": true,
-      "severity": "informational",
-      "confidence": 0.97,
-      "risk_score": 18,
-      "risk_band": "low",
-      "kill_chain": [
-        "Command and Control"
-      ],
-      "mitre_invalid": [],
-      "indicator_recall": null,
-      "matched_indicators": [],
-      "expected_indicators": [],
-      "grounding_precision": 1.0,
-      "grounded": 5,
-      "iocs_checked": 5,
-      "ungrounded_iocs": [],
-      "n_queries": 18,
-      "duration_s": 209.2,
-      "ioc_count": 7,
-      "run": 2
-    },
-    {
-      "id": "benign_dns_control",
-      "verdict": "false_positive",
-      "expected_verdict": [
-        "false_positive",
-        "inconclusive"
-      ],
-      "verdict_ok": true,
-      "severity": "informational",
-      "confidence": 0.85,
+      "confidence": 0.82,
       "risk_score": 16,
       "risk_band": "low",
       "kill_chain": [
@@ -361,9 +348,370 @@
       "grounded": 3,
       "iocs_checked": 3,
       "ungrounded_iocs": [],
-      "n_queries": 23,
-      "duration_s": 197.8,
+      "n_queries": 21,
+      "duration_s": 149.9,
       "ioc_count": 3,
+      "run": 1
+    },
+    {
+      "id": "benign_dns_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.72,
+      "risk_score": 15,
+      "risk_band": "low",
+      "kill_chain": [
+        "Command and Control"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": 1.0,
+      "grounded": 3,
+      "iocs_checked": 3,
+      "ungrounded_iocs": [],
+      "n_queries": 27,
+      "duration_s": 221.3,
+      "ioc_count": 3,
+      "run": 2
+    },
+    {
+      "id": "benign_dns_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.92,
+      "risk_score": 14,
+      "risk_band": "low",
+      "kill_chain": [],
+      "mitre_invalid": [],
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": 1.0,
+      "grounded": 3,
+      "iocs_checked": 3,
+      "ungrounded_iocs": [],
+      "n_queries": 22,
+      "duration_s": 171.1,
+      "ioc_count": 3,
+      "run": 3
+    },
+    {
+      "id": "s3_public_exposure",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.92,
+      "risk_score": 92,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Resource Development",
+        "Initial Access",
+        "Persistence",
+        "Privilege Escalation",
+        "Stealth",
+        "Defense Impairment",
+        "Exfiltration",
+        "Impact"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "expected_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 7,
+      "iocs_checked": 7,
+      "ungrounded_iocs": [],
+      "n_queries": 26,
+      "duration_s": 273.7,
+      "ioc_count": 7,
+      "run": 1
+    },
+    {
+      "id": "s3_public_exposure",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.87,
+      "risk_score": 91,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Initial Access",
+        "Persistence",
+        "Privilege Escalation",
+        "Stealth",
+        "Defense Impairment",
+        "Discovery",
+        "Collection",
+        "Exfiltration"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "expected_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 6,
+      "iocs_checked": 6,
+      "ungrounded_iocs": [],
+      "n_queries": 23,
+      "duration_s": 169.6,
+      "ioc_count": 6,
+      "run": 2
+    },
+    {
+      "id": "s3_public_exposure",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "high",
+      "confidence": 0.82,
+      "risk_score": 84,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Initial Access",
+        "Persistence",
+        "Privilege Escalation",
+        "Stealth",
+        "Collection",
+        "Exfiltration"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "expected_indicators": [
+        "frothlywebcode",
+        "bstoll"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 5,
+      "iocs_checked": 5,
+      "ungrounded_iocs": [],
+      "n_queries": 24,
+      "duration_s": 193.3,
+      "ioc_count": 5,
+      "run": 3
+    },
+    {
+      "id": "coinminer_cryptojacking",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "critical",
+      "confidence": 0.82,
+      "risk_score": 85,
+      "risk_band": "critical",
+      "kill_chain": [
+        "Initial Access",
+        "Execution",
+        "Discovery",
+        "Command and Control",
+        "Impact"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "coinhive.com"
+      ],
+      "expected_indicators": [
+        "coinhive.com"
+      ],
+      "grounding_precision": 0.929,
+      "grounded": 13,
+      "iocs_checked": 14,
+      "ungrounded_iocs": [
+        "miner.min.js"
+      ],
+      "n_queries": 20,
+      "duration_s": 182.0,
+      "ioc_count": 14,
+      "run": 1
+    },
+    {
+      "id": "coinminer_cryptojacking",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "medium",
+      "confidence": 0.85,
+      "risk_score": 68,
+      "risk_band": "high",
+      "kill_chain": [
+        "Initial Access",
+        "Command and Control",
+        "Impact"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "coinhive.com"
+      ],
+      "expected_indicators": [
+        "coinhive.com"
+      ],
+      "grounding_precision": 1.0,
+      "grounded": 9,
+      "iocs_checked": 9,
+      "ungrounded_iocs": [],
+      "n_queries": 19,
+      "duration_s": 181.8,
+      "ioc_count": 9,
+      "run": 2
+    },
+    {
+      "id": "coinminer_cryptojacking",
+      "verdict": "true_positive",
+      "expected_verdict": [
+        "true_positive"
+      ],
+      "verdict_ok": true,
+      "severity": "high",
+      "confidence": 0.87,
+      "risk_score": 75,
+      "risk_band": "high",
+      "kill_chain": [
+        "Initial Access",
+        "Execution",
+        "Command and Control",
+        "Impact"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": 1.0,
+      "matched_indicators": [
+        "coinhive.com"
+      ],
+      "expected_indicators": [
+        "coinhive.com"
+      ],
+      "grounding_precision": 0.833,
+      "grounded": 10,
+      "iocs_checked": 12,
+      "ungrounded_iocs": [
+        "ws.coinhive.com",
+        "coinhive.min.js"
+      ],
+      "n_queries": 22,
+      "duration_s": 150.2,
+      "ioc_count": 12,
+      "run": 3
+    },
+    {
+      "id": "benign_aws_recon_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.99,
+      "risk_score": 15,
+      "risk_band": "low",
+      "kill_chain": [],
+      "mitre_invalid": [],
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": 1.0,
+      "grounded": 3,
+      "iocs_checked": 3,
+      "ungrounded_iocs": [],
+      "n_queries": 13,
+      "duration_s": 165.3,
+      "ioc_count": 3,
+      "run": 1
+    },
+    {
+      "id": "benign_aws_recon_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.99,
+      "risk_score": 18,
+      "risk_band": "low",
+      "kill_chain": [
+        "Discovery"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": 1.0,
+      "grounded": 3,
+      "iocs_checked": 3,
+      "ungrounded_iocs": [],
+      "n_queries": 16,
+      "duration_s": 155.1,
+      "ioc_count": 3,
+      "run": 2
+    },
+    {
+      "id": "benign_aws_recon_control",
+      "verdict": "false_positive",
+      "expected_verdict": [
+        "false_positive",
+        "inconclusive"
+      ],
+      "verdict_ok": true,
+      "severity": "informational",
+      "confidence": 0.98,
+      "risk_score": 18,
+      "risk_band": "low",
+      "kill_chain": [
+        "Discovery"
+      ],
+      "mitre_invalid": [],
+      "indicator_recall": null,
+      "matched_indicators": [],
+      "expected_indicators": [],
+      "grounding_precision": 1.0,
+      "grounded": 4,
+      "iocs_checked": 4,
+      "ungrounded_iocs": [],
+      "n_queries": 20,
+      "duration_s": 186.8,
+      "ioc_count": 4,
       "run": 3
     }
   ]

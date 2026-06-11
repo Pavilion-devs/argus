@@ -78,6 +78,48 @@ SCENARIOS: list[Scenario] = [
         expected_verdict=["false_positive", "inconclusive"],
         expected_indicators=[],
     ),
+    Scenario(
+        id="s3_public_exposure",
+        alert=(
+            "AWS flagged that the S3 bucket 'frothlywebcode' had its access-control list "
+            "changed. Investigate whether company data was exposed, who changed it, and "
+            "from where."
+        ),
+        expected_verdict=["true_positive"],
+        # frothlywebcode: bucket whose ACL was changed to grant the AllUsers group (public)
+        #   READ access — a confirmed public exposure of company code. bstoll: the IAM user
+        #   that issued the PutBucketAcl (from 107.77.212.175). Data-verified: a PutBucketAcl
+        #   event with an AllUsers grant on frothlywebcode by bstoll is present in cloudtrail.
+        expected_indicators=["frothlywebcode", "bstoll"],
+    ),
+    Scenario(
+        id="coinminer_cryptojacking",
+        alert=(
+            "A network monitoring alert flagged DNS lookups to known cryptomining "
+            "infrastructure from inside the Frothly network. Investigate whether a host is "
+            "running a cryptominer and identify the indicators."
+        ),
+        expected_verdict=["true_positive"],
+        # coinhive.com: in-browser Monero cryptomining service. Repeated lookups to
+        #   coinhive.com and ws*.coinhive.com from the network confirm cryptojacking.
+        #   Data-verified: stream:dns queries to coinhive.com are present.
+        expected_indicators=["coinhive.com"],
+    ),
+    Scenario(
+        id="benign_aws_recon_control",
+        alert=(
+            "An analyst flagged heavy AWS 'Describe*' and 'List*' API enumeration from "
+            "34.215.24.225 as possible attacker reconnaissance. Investigate whether this "
+            "is a real threat."
+        ),
+        # Precision control #2: looks like AWS recon, but 34.215.24.225 is
+        #   arn:aws:iam::622676721278:user/splunk_access — the Splunk Add-on for AWS's own
+        #   data-collection account (userAgent Boto3/…Linux-aws; 4040 benign read-only calls;
+        #   zero denied/abusive actions; never touches the compromised web_admin). The agent
+        #   must NOT flag its own monitoring infrastructure as an attacker. Data-verified benign.
+        expected_verdict=["false_positive", "inconclusive"],
+        expected_indicators=[],
+    ),
 ]
 
 

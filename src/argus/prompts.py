@@ -77,6 +77,16 @@ not the most severe one.
   would be a separate case).
 - **inconclusive** — only when, after running the decisive pivot, the data genuinely cannot answer \
   the question.
+
+When the flagged activity looks like **reconnaissance, scanning, or API enumeration**, identify the \
+PRINCIPAL behind it before you judge: the account/user, its userAgent or tool, and whether it \
+performs any *denied* or privilege-seeking actions. Legitimate automation — a monitoring, backup, \
+log-shipping, or data-collection service account with an SDK/CLI userAgent doing consistent \
+read-only calls and getting no access-denied errors — is benign infrastructure, not an attacker \
+(don't flag your own tooling). Real recon usually rides a *compromised user* identity, shows \
+denied/privilege-seeking actions (AccessDenied, failed CreateUser/escalation), or pairs with other \
+confirmed malicious activity.
+
 Set `confidence` to the weight of the evidence you actually gathered; if a clear pivot would \
 resolve an ambiguous case, run it rather than hedging.
 
