@@ -6,6 +6,21 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
+class HypothesisVerdict(BaseModel):
+    """Final status of a tracked hypothesis once the investigation concludes."""
+
+    id: str = Field(description="The hypothesis id being resolved")
+    status: Literal["confirmed", "refuted", "open"]
+    confidence: float = Field(description="0.0-1.0 final confidence in the resolution")
+    evidence: str = Field(default="", description="One-line note on what settled it")
+
+
+class HypothesisVerdicts(BaseModel):
+    """Resolutions for the still-open hypotheses, reconciled against the final verdict."""
+
+    resolutions: list[HypothesisVerdict] = Field(default_factory=list)
+
+
 class TimelineEntry(BaseModel):
     time: str = Field(description="Timestamp (or relative ordering) of the event")
     event: str = Field(description="What happened at this point in the attack")

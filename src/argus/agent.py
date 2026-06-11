@@ -19,7 +19,7 @@ from .config import Settings, get_settings
 from .connectors import ResponseEngine
 from .llm import make_llm_client
 from .mcp_client import MCPToolError, SplunkMCPClient
-from .models import InvestigationReport
+from .models import HypothesisVerdicts, InvestigationReport
 from .prompts import (
     AUTH_SPECIALIST,
     ENDPOINT_SPECIALIST,
@@ -149,6 +149,51 @@ def _format_hypotheses(hypotheses: dict[str, dict[str, Any]]) -> str:
         + (f" — {h.get('evidence')}" if h.get("evidence") else "")
         for h in hypotheses.values()
     )
+
+
+async def reconcile_hypotheses(
+    client: Any,
+    model: str,
+    hypotheses: dict[str, dict[str, Any]],
+    *,
+    basis: str,
+    verdict: str,
+) -> None:
+    """Close out the hypothesis ledger. The agent declares hypotheses during the
+    investigation but doesn't always loop back to resolve them; this reconciles every
+    still-`open` hypothesis against the final verdict + analysis so the ledger ends
+    confirmed/refuted (or stays open only when the data genuinely couldn't settle it).
+    Mutates `hypotheses` in place; a failure here never breaks the report."""
+    open_ids = {hid: h for hid, h in hypotheses.items() if h.get("status") == "open"}
+    if not open_ids:
+        return
+    listing = "\n".join(f"- {hid}: {h.get('statement', '')}" for hid, h in open_ids.items())
+    content = (
+        f"An investigation just concluded with verdict: {verdict}.\n\n"
+        f"## Final analysis\n{(basis or '(none)')[:6000]}\n\n"
+        f"## Working hypotheses still marked OPEN\n{listing}\n\n"
+        "Resolve EACH hypothesis strictly from what the investigation found: mark it "
+        "`confirmed` if the evidence supports it, `refuted` if the evidence contradicts it, or "
+        "`open` ONLY if the data genuinely could not settle it. Give a final confidence "
+        "(0.0-1.0) and a one-line evidence note citing what settled it. Return exactly one "
+        "resolution per hypothesis id listed above (use the same ids)."
+    )
+    try:
+        result = await client.messages.parse(
+            model=model,
+            max_tokens=2000,
+            messages=[{"role": "user", "content": content}],
+            output_format=HypothesisVerdicts,
+        )
+        for r in result.parsed_output.resolutions:
+            if r.id in hypotheses:
+                hypotheses[r.id]["status"] = r.status
+                hypotheses[r.id]["confidence"] = r.confidence
+                if r.evidence:
+                    hypotheses[r.id]["evidence"] = r.evidence
+    except Exception:
+        pass  # leave the ledger as-is rather than fail the whole report
+
 
 # An approver decides whether a proposed response action may execute.
 Approver = Callable[[str, dict[str, Any]], Awaitable[bool]]
@@ -505,6 +550,11 @@ class Investigator:
                     yield ev
             report = await self._synthesize(final_text)
 
+        # Close out the hypothesis ledger against the final verdict (declare → resolve).
+        await reconcile_hypotheses(
+            self.client, self.model, self.hypotheses,
+            basis=final_text or report.summary, verdict=report.verdict,
+        )
         rep = enrich.enrich_report(
             report.model_dump(),
             evidence_pairs=self._evidence_pairs(),
@@ -830,6 +880,10 @@ class MultiAgentInvestigator:
         await waiter
 
         report = await self._synthesize_multi(alert, findings)
+        await reconcile_hypotheses(
+            self.client, self.model, self.hypotheses,
+            basis=report.summary, verdict=report.verdict,
+        )
         rep = enrich.enrich_report(
             report.model_dump(),
             evidence_pairs=[(e.tool, e.result_text) for e in self.evidence if not e.is_error],
