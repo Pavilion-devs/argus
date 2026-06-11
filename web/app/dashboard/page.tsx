@@ -282,11 +282,6 @@ export default function Dashboard() {
                       )}
                     </button>
                   </div>
-                  <span className="text-[11px] text-zinc-600">
-                    {view === "report"
-                      ? "the grounded verdict & evidence"
-                      : "how Argus got there — live reasoning & SPL"}
-                  </span>
                 </div>
 
                 {/* status cards — persistent bridge across the toggle */}
