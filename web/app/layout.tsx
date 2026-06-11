@@ -11,9 +11,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CogniCore - Scalable Intelligence",
+  title: "Argus — Autonomous SOC Investigation Agent",
   description:
-    "A high-performance SaaS landing page for AI infrastructure and enterprise intelligence platforms, featuring a futuristic dark aesthetic and interactive dashboard components.",
+    "Argus autonomously investigates security alerts end-to-end on the Splunk platform — planning and running its own SPL through the Splunk MCP Server, pivoting across real data, reaching a grounded verdict, then containing the threat. Every conclusion links to the exact query and the exact events behind it.",
 };
 
 export default function RootLayout({

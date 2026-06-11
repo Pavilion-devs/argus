@@ -33,12 +33,12 @@ export default function HeroSection() {
       </div>
       <main className="z-10 flex-1 flex flex-col text-center mt-20 pr-4 pl-4 relative items-center justify-center">
         <h1 className="flex flex-wrap gap-x-[0.25em] gap-y-[0.1em] md:text-5xl lg:text-8xl text-4xl font-light text-white tracking-tighter font-geist max-w-4xl mb-6 drop-shadow-2xl justify-center">
-          <MaskedText text="Cognition That Scales." />
+          <MaskedText text="The SOC analyst that proves its work." />
         </h1>
-        <p className="reveal-element text-sm md:text-lg font-extralight text-gray-300 max-w-[580px] leading-relaxed mb-10 drop-shadow-md font-geist">Architect, automate, and optimize your workflows using an intelligent engine that assimilates your inputs and perpetually improves.</p>
+        <p className="reveal-element text-sm md:text-lg font-extralight text-gray-300 max-w-[580px] leading-relaxed mb-10 drop-shadow-md font-geist">Argus autonomously investigates security alerts end-to-end on Splunk — planning and running its own SPL through the MCP Server, pivoting across real data, reaching a grounded verdict, then containing the threat. Every conclusion links to the exact query and the exact events behind it.</p>
         <div className="stagger-container flex flex-col sm:flex-row items-center gap-5">
-          <button className="stagger-item w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-medium rounded-full shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(255,255,255,0.45)] hover:scale-[1.02] transition-all duration-300 font-geist">Launch Platform</button>
-          <button className="stagger-item w-full sm:w-auto px-8 py-3.5 bg-black/40 backdrop-blur-md border border-white/10 text-white text-sm font-medium rounded-full hover:bg-white/10 hover:border-white/20 transition-all duration-300 font-geist">Explore Architecture</button>
+          <a href="/dashboard" className="stagger-item w-full sm:w-auto px-8 py-3.5 bg-white text-black text-sm font-medium rounded-full shadow-[0_0_24px_rgba(255,255,255,0.25)] hover:shadow-[0_0_40px_rgba(255,255,255,0.45)] hover:scale-[1.02] transition-all duration-300 font-geist text-center">Launch live investigation</a>
+          <a href="#how-it-works" className="stagger-item w-full sm:w-auto px-8 py-3.5 bg-black/40 backdrop-blur-md border border-white/10 text-white text-sm font-medium rounded-full hover:bg-white/10 hover:border-white/20 transition-all duration-300 font-geist text-center">See how it works</a>
         </div>
       </main>
       <div className="reveal-element absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce text-white/50">

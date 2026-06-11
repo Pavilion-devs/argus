@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Lightweight neural-network style particle field rendered on a <canvas>.
- * Particles drift slowly and connect with faint lines when close, echoing the
- * "Neural Core" card it overlays. Resizes to its parent and respects DPR.
+ * Lightweight particle field rendered on a <canvas>. Particles drift slowly and
+ * connect with faint lines when close, echoing the constellation-of-evidence
+ * feel of the "Alert → Plan" card it overlays. Resizes to its parent and respects DPR.
  */
 export default function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
