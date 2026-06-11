@@ -1,7 +1,7 @@
 // Read-endpoint helpers. The browser uses same-origin relative paths; Next
 // rewrites proxy /api/* to the Argus bridge (see next.config.mjs).
 
-import type { BlocklistRow, CaseRow, DetectionRow } from "./types";
+import type { BlocklistRow, CaseRow, DetectionRow, EvalResults } from "./types";
 
 async function getJSON<T>(path: string): Promise<T> {
   const resp = await fetch(path, { headers: { Accept: "application/json" }, cache: "no-store" });
@@ -23,6 +23,7 @@ export const api = {
   cases: () => getJSON<{ cases: CaseRow[]; error?: string }>("/api/cases"),
   detections: () => getJSON<{ detections: DetectionRow[]; error?: string }>("/api/detections"),
   blocklist: () => getJSON<{ blocklist: BlocklistRow[]; error?: string }>("/api/blocklist"),
+  evaluation: () => getJSON<EvalResults>("/api/eval"),
 };
 
 export async function postDecision(stream_id: string, action_id: string, approved: boolean) {

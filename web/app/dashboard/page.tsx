@@ -13,6 +13,7 @@ import ReportPanel from "@/components/dashboard/ReportPanel";
 import EvidenceDrawer from "@/components/dashboard/EvidenceDrawer";
 import ResponsePanel from "@/components/dashboard/ResponsePanel";
 import MemoryTab from "@/components/dashboard/MemoryTab";
+import EvalPanel from "@/components/dashboard/EvalPanel";
 import { api } from "@/lib/api";
 import { useInvestigation } from "@/lib/useInvestigation";
 import { verdictStyle, severityChip, riskColor } from "@/lib/format";
@@ -86,7 +87,7 @@ export default function Dashboard() {
   const { state, run, stop, respond, decide } = useInvestigation();
   const [alert, setAlert] = useState(PRESETS[0].alert);
   const [multi, setMulti] = useState(false);
-  const [tab, setTab] = useState<"investigate" | "memory">("investigate");
+  const [tab, setTab] = useState<"investigate" | "memory" | "evaluation">("investigate");
   const [view, setView] = useState<"trace" | "report">("trace");
   const [evidenceId, setEvidenceId] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
@@ -147,7 +148,7 @@ export default function Dashboard() {
       : state.status === "done" ? "Complete"
         : state.status === "error" ? "Error" : "Idle";
 
-  const selectTab = (t: "investigate" | "memory") => {
+  const selectTab = (t: "investigate" | "memory" | "evaluation") => {
     setTab(t);
     if (t === "memory") bumpRefresh();
   };
@@ -344,8 +345,10 @@ export default function Dashboard() {
               </>
             )}
           </>
-        ) : (
+        ) : tab === "memory" ? (
           <MemoryTab refreshKey={refreshKey} />
+        ) : (
+          <EvalPanel />
         )}
         </div>
       </div>
