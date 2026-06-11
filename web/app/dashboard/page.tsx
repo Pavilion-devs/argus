@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { Icon } from "@iconify/react";
 import Background from "@/components/Background";
-import Nav from "@/components/Nav";
+import Sidebar from "@/components/dashboard/Sidebar";
+import Topbar from "@/components/dashboard/Topbar";
 import ReasoningStream from "@/components/dashboard/ReasoningStream";
 import SplFeed from "@/components/dashboard/SplFeed";
 import HypothesisLedger from "@/components/dashboard/HypothesisLedger";
@@ -41,24 +42,6 @@ const PRESETS: { label: string; alert: string }[] = [
 ];
 
 type HealthData = Awaited<ReturnType<typeof api.health>>;
-
-function HealthPill({ health }: { health: HealthData | null }) {
-  const ok = health?.mcp === "connected";
-  return (
-    <div className="flex items-center gap-2 rounded-full border border-line bg-surface-100/60 px-3 py-1.5 text-[11px]">
-      <span className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-confirm animate-pulse-glow" : health ? "bg-threat-high" : "bg-zinc-600"}`} />
-      <span className="text-zinc-400">
-        {health ? (
-          <>
-            MCP {ok ? "connected" : health.mcp} · {health.provider}/{(health.model ?? "").replace(/^global\.anthropic\./, "")}
-          </>
-        ) : (
-          "checking engine…"
-        )}
-      </span>
-    </div>
-  );
-}
 
 function StatTile({ icon, label, value, accent }: { icon: string; label: string; value: string; accent?: string }) {
   return (
@@ -130,43 +113,20 @@ export default function Dashboard() {
       : state.status === "done" ? "Complete"
         : state.status === "error" ? "Error" : "Idle";
 
+  const selectTab = (t: "investigate" | "memory") => {
+    setTab(t);
+    if (t === "memory") bumpRefresh();
+  };
+
   return (
-    <main className="relative min-h-screen pb-20 font-geist">
+    <main className="relative min-h-screen font-geist">
       <Background dense />
-      <Nav variant="app" />
+      <Sidebar tab={tab} onTab={selectTab} />
 
-      <div className="mx-auto max-w-7xl px-4 pt-24 sm:px-6">
-        {/* title row */}
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-light tracking-tight text-white">Investigation console</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Live, grounded autonomous investigation streamed from the real Argus engine.
-            </p>
-          </div>
-          <HealthPill health={health} />
-        </div>
+      <div className="lg:pl-64">
+        <Topbar tab={tab} onTab={selectTab} health={health} />
 
-        {/* tabs */}
-        <div className="mb-5 flex items-center gap-1 rounded-full border border-line bg-surface-100/50 p-1 text-sm">
-          {([["investigate", "Live investigation", "solar:pulse-linear"], ["memory", "Memory & hardening", "solar:history-linear"]] as const).map(
-            ([id, label, icon]) => (
-              <button
-                key={id}
-                onClick={() => {
-                  setTab(id);
-                  if (id === "memory") bumpRefresh();
-                }}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors ${
-                  tab === id ? "bg-primary text-white shadow-glow-sm" : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                <Icon icon={icon} className="h-4 w-4" /> {label}
-              </button>
-            ),
-          )}
-        </div>
-
+        <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6">
         {tab === "investigate" ? (
           <>
             {/* command bar */}
@@ -308,6 +268,7 @@ export default function Dashboard() {
         ) : (
           <MemoryTab refreshKey={refreshKey} />
         )}
+        </div>
       </div>
 
       <EvidenceDrawer rec={evidenceId ? byId[evidenceId] ?? null : null} onClose={() => setEvidenceId(null)} />
