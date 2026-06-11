@@ -15,6 +15,8 @@ import ResponsePanel from "@/components/dashboard/ResponsePanel";
 import MemoryTab from "@/components/dashboard/MemoryTab";
 import { api } from "@/lib/api";
 import { useInvestigation } from "@/lib/useInvestigation";
+import { verdictStyle, severityChip, riskColor } from "@/lib/format";
+import type { Report } from "@/lib/types";
 
 const PRESETS: { label: string; alert: string }[] = [
   {
@@ -55,11 +57,37 @@ function StatTile({ icon, label, value, accent }: { icon: string; label: string;
   );
 }
 
+// Headline conclusion for the sticky verdict bar: verdict badge + risk + title.
+// Renders inline items; the sticky wrapper provides the flex row.
+function VerdictBar({ report }: { report: Report }) {
+  const v = verdictStyle(report.verdict);
+  return (
+    <>
+      <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${v.cls}`}>
+        <Icon icon={v.icon} className="h-4 w-4" /> {v.label}
+      </span>
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface-100/60 px-2.5 py-1 text-xs">
+        <span className="h-2 w-2 rounded-full" style={{ background: riskColor(report.risk_band) }} />
+        <span className="tnum text-white">{Math.round(report.risk_score)}</span>
+        <span className="text-zinc-500">/100</span>
+        <span className="hidden capitalize text-zinc-400 sm:inline">· {report.risk_band} risk</span>
+      </span>
+      <span className="min-w-0 flex-1 truncate text-sm text-zinc-300" title={report.title}>
+        {report.title}
+      </span>
+      <span className={`hidden shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] capitalize sm:inline-flex ${severityChip(report.severity)}`}>
+        {report.severity}
+      </span>
+    </>
+  );
+}
+
 export default function Dashboard() {
   const { state, run, stop, respond, decide } = useInvestigation();
   const [alert, setAlert] = useState(PRESETS[0].alert);
   const [multi, setMulti] = useState(false);
   const [tab, setTab] = useState<"investigate" | "memory">("investigate");
+  const [view, setView] = useState<"trace" | "report">("trace");
   const [evidenceId, setEvidenceId] = useState<string | null>(null);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [refreshKey, bumpRefresh] = useReducer((x: number) => x + 1, 0);
@@ -83,6 +111,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (state.response.status === "done") bumpRefresh();
   }, [state.response.status]);
+
+  // Report-first: when the grounded report lands, auto-focus the Report view so
+  // the verdict is front-and-center. The Trace stays one click away.
+  useEffect(() => {
+    if (state.report) setView("report");
+  }, [state.report]);
 
   const byId = useMemo(() => {
     const m: Record<string, (typeof state.toolCalls)[number]> = {};
@@ -116,6 +150,12 @@ export default function Dashboard() {
   const selectTab = (t: "investigate" | "memory") => {
     setTab(t);
     if (t === "memory") bumpRefresh();
+  };
+
+  // Always start a run from the Trace view; it auto-switches to Report on completion.
+  const startRun = () => {
+    setView("trace");
+    run(alert, { multi });
   };
 
   return (
@@ -175,7 +215,7 @@ export default function Dashboard() {
                       <Icon icon="solar:stop-circle-linear" className="h-5 w-5" /> Stop
                     </button>
                   ) : (
-                    <button onClick={() => run(alert, { multi })} disabled={!alert.trim()} className="btn-primary">
+                    <button onClick={startRun} disabled={!alert.trim()} className="btn-primary">
                       <Icon icon="solar:play-circle-linear" className="h-5 w-5" /> Run investigation
                     </button>
                   )}
@@ -183,18 +223,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* status strip */}
-            {hasContent && (
-              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatTile
-                  icon={running ? "solar:pulse-linear" : state.status === "error" ? "solar:danger-triangle-linear" : "solar:check-circle-linear"}
-                  label="Phase"
-                  value={phase}
-                  accent={state.status === "error" ? "text-refute" : running ? "text-primary-bright" : "text-confirm"}
-                />
-                <StatTile icon="solar:database-linear" label="SPL queries" value={String(queries)} />
-                <StatTile icon="solar:branching-paths-up-linear" label="Hypotheses" value={String(hypCount)} />
-                <StatTile icon="solar:clock-circle-linear" label="Elapsed" value={`${elapsed.toFixed(0)}s`} />
+            {/* sticky verdict bar — the headline conclusion, always visible once a report exists */}
+            {state.report && (
+              <div className="sticky top-16 z-30 -mx-4 mb-5 flex flex-wrap items-center gap-3 border-y border-line bg-ink/85 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6">
+                <VerdictBar report={state.report} />
               </div>
             )}
 
@@ -221,48 +253,100 @@ export default function Dashboard() {
             )}
 
             {hasContent && (
-              <div className="grid gap-5 lg:grid-cols-3">
-                <div className="flex flex-col gap-5 lg:col-span-2">
-                  <ReasoningStream state={state} />
-                  <SplFeed toolCalls={state.toolCalls} multi={state.mode === "multi"} />
-                </div>
-                <div className="flex flex-col gap-5">
-                  <HypothesisLedger hypotheses={state.hypotheses} />
-                  <MemoryPanel state={state} />
-                  {state.report && (
-                    <ResponsePanel
-                      report={!!state.report}
-                      response={state.response}
-                      onRespond={respond}
-                      onDecide={decide}
-                    />
-                  )}
-                </div>
-              </div>
-            )}
-
-            {synthesizing && !state.report && (
-              <div className="panel mt-5 flex items-center gap-4 p-6">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10">
-                  <Icon icon="solar:document-add-linear" className="h-6 w-6 text-primary-bright animate-pulse-glow" />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-sm font-medium text-zinc-100">
-                    <Icon icon="solar:spinner-linear" className="h-4 w-4 animate-spin-slow text-primary-bright" />
-                    Synthesizing the grounded report
+              <>
+                {/* Trace ↔ Report toggle: "how it got there" vs "what's the answer" */}
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <div className="inline-flex rounded-xl border border-line bg-surface-100/50 p-1">
+                    <button
+                      onClick={() => setView("trace")}
+                      className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                        view === "trace" ? "bg-primary text-white shadow-glow-sm" : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <Icon icon="solar:routing-2-linear" className="h-4 w-4" /> Trace
+                    </button>
+                    <button
+                      onClick={() => state.report && setView("report")}
+                      disabled={!state.report}
+                      className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                        view === "report"
+                          ? "bg-primary text-white shadow-glow-sm"
+                          : state.report
+                            ? "text-zinc-400 hover:text-white"
+                            : "cursor-not-allowed text-zinc-600"
+                      }`}
+                    >
+                      <Icon icon="solar:shield-check-linear" className="h-4 w-4" /> Report
+                      {!state.report && running && (
+                        <Icon icon="solar:spinner-linear" className="h-3.5 w-3.5 animate-spin-slow" />
+                      )}
+                    </button>
                   </div>
-                  <p className="mt-1 text-[13px] text-zinc-500">
-                    Reasoning complete — validating MITRE ATT&amp;CK against the pinned catalog, building the
-                    kill-chain, computing the composite risk score, and linking every claim to its evidence.
-                  </p>
+                  <span className="text-[11px] text-zinc-600">
+                    {view === "report"
+                      ? "the grounded verdict & evidence"
+                      : "how Argus got there — live reasoning & SPL"}
+                  </span>
                 </div>
-              </div>
-            )}
 
-            {state.report && (
-              <div className="mt-5">
-                <ReportPanel report={state.report} evidenceIds={evidenceIds} onEvidence={setEvidenceId} />
-              </div>
+                {/* status cards — persistent bridge across the toggle */}
+                <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatTile
+                    icon={running ? "solar:pulse-linear" : state.status === "error" ? "solar:danger-triangle-linear" : "solar:check-circle-linear"}
+                    label="Phase"
+                    value={phase}
+                    accent={state.status === "error" ? "text-refute" : running ? "text-primary-bright" : "text-confirm"}
+                  />
+                  <StatTile icon="solar:database-linear" label="SPL queries" value={String(queries)} />
+                  <StatTile icon="solar:branching-paths-up-linear" label="Hypotheses" value={String(hypCount)} />
+                  <StatTile icon="solar:clock-circle-linear" label="Elapsed" value={`${elapsed.toFixed(0)}s`} />
+                </div>
+
+                {/* synthesis gap — reasoning done, structured report incoming */}
+                {synthesizing && !state.report && (
+                  <div className="panel mb-5 flex items-center gap-4 p-6">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10">
+                      <Icon icon="solar:document-add-linear" className="h-6 w-6 text-primary-bright animate-pulse-glow" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-sm font-medium text-zinc-100">
+                        <Icon icon="solar:spinner-linear" className="h-4 w-4 animate-spin-slow text-primary-bright" />
+                        Synthesizing the grounded report
+                      </div>
+                      <p className="mt-1 text-[13px] text-zinc-500">
+                        Reasoning complete — validating MITRE ATT&amp;CK against the pinned catalog, building the
+                        kill-chain, computing the composite risk score, and linking every claim to its evidence.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* main region toggles Trace ↔ Report; the side rail stays put */}
+                <div className="grid gap-5 lg:grid-cols-3">
+                  <div className="flex flex-col gap-5 lg:col-span-2">
+                    {view === "report" && state.report ? (
+                      <ReportPanel report={state.report} evidenceIds={evidenceIds} onEvidence={setEvidenceId} />
+                    ) : (
+                      <>
+                        <ReasoningStream state={state} />
+                        <SplFeed toolCalls={state.toolCalls} multi={state.mode === "multi"} />
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-5">
+                    <HypothesisLedger hypotheses={state.hypotheses} />
+                    <MemoryPanel state={state} />
+                    {state.report && (
+                      <ResponsePanel
+                        report={!!state.report}
+                        response={state.response}
+                        onRespond={respond}
+                        onDecide={decide}
+                      />
+                    )}
+                  </div>
+                </div>
+              </>
             )}
           </>
         ) : (

@@ -144,6 +144,13 @@ export function useInvestigation() {
           break;
         case "report":
           s.report = ev.report;
+          // The engine reconciles still-open hypotheses at synthesis; those final
+          // confirmed/refuted statuses ride in report.hypotheses and are NOT
+          // re-emitted as hypothesis events. Merge them so the ledger shows the
+          // resolved verdict, not the mid-run guess.
+          for (const h of ev.report.hypotheses ?? []) {
+            if (h?.id) s.hypotheses[h.id] = { ...s.hypotheses[h.id], ...h };
+          }
           break;
         case "done":
           s.status = "done";
