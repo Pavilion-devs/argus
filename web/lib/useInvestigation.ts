@@ -220,7 +220,9 @@ export function useInvestigation() {
           });
           break;
         case "action_executed": {
-          const a = r.actions.find((x) => x.status === "proposed" && x.desc === ev.desc);
+          // Match by desc regardless of status — decide() may have optimistically
+          // flipped it already — so we finalize in place instead of duplicating.
+          const a = r.actions.find((x) => x.desc === ev.desc);
           if (a) {
             a.status = "executed";
             a.result = ev.result;
@@ -231,9 +233,13 @@ export function useInvestigation() {
           break;
         }
         case "action_skipped": {
-          const a = r.actions.find((x) => x.status === "proposed" && x.desc === ev.desc);
-          if (a) a.status = "skipped";
-          else r.actions.push({ desc: ev.desc, status: "skipped", name: ev.action });
+          const a = r.actions.find((x) => x.desc === ev.desc);
+          if (a) {
+            a.status = "skipped";
+            a.name = ev.action;
+          } else {
+            r.actions.push({ desc: ev.desc, status: "skipped", name: ev.action });
+          }
           break;
         }
         case "response_done":
