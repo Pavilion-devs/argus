@@ -50,9 +50,13 @@ contain the threat.
   writes a new read-only SPL **detection** for the attack pattern and **installs it as a
   real scheduled Splunk correlation search**, so the SOC auto-alerts if it recurs. Argus
   doesn't just close the incident — it leaves behind the detection that catches the next one.
-- **Evaluation harness** (`argus eval`) — measures verdict accuracy, indicator recall,
-  **grounding precision** (every reported IOC is verified to exist in the data), and
-  **ATT&CK validity** (count of invalid technique ids — should be zero).
+- **Evaluation harness** (`argus eval`) — runs Argus against 6 curated BOTS v3 scenarios
+  (4 real attacks: AWS IAM credential abuse, endpoint malware, S3 public exposure,
+  cryptojacking; + 2 benign precision controls) and measures verdict accuracy, indicator
+  recall, **grounding precision** (every reported IOC verified to exist in the data), and
+  **ATT&CK validity** (invalid technique ids — should be zero). `--repeat K` multi-samples
+  each scenario and reports a verdict **pass-rate** (a single run is one noisy draw). Every
+  ground-truth indicator is curated from the data as verified-malicious, not just present.
 - **Live token-by-token streaming** of the agent's reasoning.
 - **Provider-agnostic** — runs on the **Anthropic API** or **AWS Bedrock**.
 

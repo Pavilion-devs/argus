@@ -21,6 +21,15 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
   the agent to surface `34.215.24.225`) would have *trained the over-calling we just removed.*
 - ✅ **Endpoint verdict variance — RESOLVED** (see [`problems.md`](problems.md) P2): Sysmon-XML
   extraction tradecraft + a confidence-gated continuation. Verified 3/3 true_positive.
+- ✅ **Over-calling benign API enumeration as "recon" — RESOLVED** (surfaced by the expanded
+  benchmark). A new precision control (`benign_aws_recon_control` — the same `splunk_access` data
+  collector, alerted as "possible recon") caught the agent calling it `true_positive` ~1/2 the
+  time. Root cause: it confirmed "enumeration = recon" without identifying the principal. Fixed with
+  general tradecraft (prompts.py): before judging enumeration/scanning, identify the account +
+  userAgent and check for denied/abusive actions — a service account with an SDK/CLI userAgent doing
+  read-only calls with no denials is benign automation, not an attacker. Now 3/3 false_positive,
+  and ~40% fewer queries (it rules benign faster). Real attacks stay flagged (they ride a
+  compromised identity / show denied actions).
 - 🟢 **Confidence-gated continuation adds latency to inconclusive runs.** When the first verdict
   is a low-confidence `inconclusive`, Argus runs one extra ~4-turn pass before finalizing. Only
   fires on hedged verdicts (confident ones finalize immediately), but it does add a minute or two
