@@ -163,6 +163,13 @@ recall), grounded reports, validated MITRE ATT&CK + kill-chain, composite risk s
 real containment, the self-hardening detection-as-code loop, threat-intel, streaming,
 and the eval harness. A streaming web UI is next. See [`PROJECT.md`](PROJECT.md).
 
+**Evaluation & engineering rigor:** [`EVALUATION.md`](EVALUATION.md) documents the
+6-scenario BOTS v3 benchmark, the measured results (verdict accuracy 1.0, grounding 0.99,
+0 hallucinated ATT&CK ids over 18 runs), and the real bugs the harness caught and we
+root-caused — including a poisoned ground-truth indicator that turned out to be Splunk's
+own data collector. Open limitations: [`issues.md`](issues.md); resolved problems with
+evidence: [`problems.md`](problems.md).
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
