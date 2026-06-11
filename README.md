@@ -161,7 +161,11 @@ splunk/argus_response/       # companion Splunk app (KV collections + correlatio
 single- + multi-agent investigation, hypothesis ledger, institutional memory (case
 recall), grounded reports, validated MITRE ATT&CK + kill-chain, composite risk scoring,
 real containment, the self-hardening detection-as-code loop, threat-intel, streaming,
-and the eval harness. A streaming web UI is next. See [`PROJECT.md`](PROJECT.md).
+and the eval harness. A **streaming web UI** is now in [`web/`](web/) — a polished
+Next.js landing page + a live investigation dashboard that streams a real Argus
+investigation (reasoning, SPL, hypotheses, recall, grounded report, response) over SSE
+via a thin FastAPI bridge (`argus serve`). See [`web/README.md`](web/README.md) and
+[`PROJECT.md`](PROJECT.md).
 
 **Evaluation & engineering rigor:** [`EVALUATION.md`](EVALUATION.md) documents the
 6-scenario BOTS v3 benchmark, the measured results (verdict accuracy 1.0, grounding 0.99,

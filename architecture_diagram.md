@@ -5,8 +5,8 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  CLI / (web UI next)   check · query · investigate [--multi] [--respond] · eval │
-│  live token-by-token streaming of agent reasoning + SPL + results              │
+│  CLI · WEB UI (web/ + argus serve SSE bridge)   investigate [--multi] [--respond]│
+│  live token-by-token streaming of agent reasoning + SPL + results + report      │
 └───────────────────────────────┬────────────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼────────────────────────────────────────────────┐
