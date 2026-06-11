@@ -48,3 +48,38 @@ body {
   transform-origin: bottom;
   will-change: height, opacity;
 }
+
+/* ── Argus dashboard primitives ──────────────────────────────────────────────
+   Card / button / chip classes the restored dashboard components use. Built on
+   the same template tokens (now defined in tailwind.config.ts) so the dashboard
+   matches the marketing surface. */
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-line bg-surface-100/70 backdrop-blur-sm;
+  }
+  .panel-header {
+    @apply flex items-center justify-between border-b border-line/70 px-4 py-3;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs font-medium text-zinc-300;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-700 hover:shadow-glow-sm disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-line-strong bg-surface-100/50 px-5 py-2.5 text-sm font-medium text-zinc-200 transition-all hover:border-white/20 hover:bg-surface-50;
+  }
+}
+
+/* Token-stream caret (blinks at the end of the live reasoning stream) */
+.stream-caret::after {
+  content: "▋";
+  @apply ml-0.5 text-primary-bright;
+  animation: caret-blink 1s step-end infinite;
+}
+
+/* Tabular numerals for metrics/counters so they don't jitter while streaming */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
