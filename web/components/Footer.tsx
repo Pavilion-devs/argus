@@ -1,0 +1,101 @@
+'use client';
+
+import { Icon } from "@iconify/react";
+
+export default function Footer() {
+  return (
+    <footer className="bg-[#030303] z-20 border-[#27272a]/50 border-t pt-20 pr-6 pb-10 pl-6 relative">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-16 md:gap-8">
+        <div className="flex flex-col items-start max-w-sm">
+          <a className="flex items-center gap-3 mb-6 group transition-transform active:scale-95" href="/">
+            <svg className="w-[36px] h-[36px] drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] group-hover:drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] transition-all duration-300" fill="none" viewBox="0 0 122 122" xmlns="http://www.w3.org/2000/svg">
+              <path d="M60.4611 0C61.0499 0.182365 61.4958 0.581291 61.932 1.00347C67.9008 6.78239 73.764 12.7327 79.6201 18.6163L100.82 39.7775L113.405 52.4022C115.784 54.765 119.138 57.8427 121.218 60.3321C120.271 61.7905 118.945 62.8395 117.728 64.0602C100.451 81.3917 83.0922 98.6452 65.8455 116.004C64.2031 117.658 62.3346 119.147 60.9732 121.041C60.6276 120.962 60.2016 120.865 59.9465 120.616C55.0782 115.858 50.278 111.003 45.4822 106.17L23.3978 84.0723L9.47885 70.1915C7.48282 68.2534 5.51432 66.287 3.5741 64.2929C2.45906 63.167 0.959912 61.7321 0 60.5347C1.00705 58.8554 7.63278 52.6975 9.4554 50.853L42.0558 18.2108L54.8635 5.38662C56.0216 4.2361 59.3118 0.815429 60.4611 0ZM7.13702 60.5546C8.60706 62.0661 10.8746 64.1931 12.1628 65.6756C13.1185 64.1867 16.0214 61.5641 17.3569 60.2562L24.2749 53.3464L38.0102 39.5641C39.5013 38.095 41.4016 35.9705 42.8966 34.6706C44.988 32.6796 49.8461 27.3421 51.9035 26.0575C53.7333 27.2433 57.7857 31.6026 59.5196 33.3394L74.7666 48.5854C76.7955 50.6181 80.8724 54.9486 82.9467 56.6435C84.0647 55.7266 87.0272 53.1121 87.6793 51.9665C87.7427 51.0196 76.7964 40.5924 75.2973 39.0426C69.1901 32.7289 62.8377 26.5734 56.6619 20.3199C56.0812 19.7368 52.0402 15.5103 51.9733 15.4849C48.7738 18.4992 45.4505 22.0117 42.3193 25.1361L21.9285 45.5496C19.2708 48.2186 16.5189 50.8968 13.8747 53.5841C11.9757 55.514 8.65557 58.4733 7.13702 60.5546ZM55.4309 12.0689C57.6008 13.7129 59.5464 16.0794 61.4969 17.9592C63.9881 20.3604 66.3483 22.8379 68.7851 25.2595L78.8355 35.1965C80.4446 36.8147 81.9917 38.5273 83.6231 40.1208L89.5895 46.0595C91.4524 47.889 93.5472 49.608 94.9914 51.7677C94.1486 53.3099 90.7923 56.1612 89.3489 57.6255L73.2747 73.8293C70.7027 76.3972 66.6705 80.1298 64.4204 82.8376C65.3441 83.9356 67.977 87.0522 69.1554 87.5773C69.6538 87.5274 69.459 87.5922 69.8974 87.2815C73.3393 84.4322 76.5661 80.2578 79.7859 77.1889C87.4061 69.926 94.8807 62.4825 102.178 54.8946C103.284 53.744 104.514 53.1543 105.435 51.8077C104.408 50.5298 102.121 48.3966 100.883 47.1773L93.3055 39.6713L69.8324 16.1348C68.9634 15.2543 60.9287 7.09619 60.472 6.91968C58.8637 8.71855 57.0589 10.1637 55.4309 12.0689ZM60.5598 113.829C60.6435 113.822 60.7447 113.814 60.8634 113.804C62.2943 112.217 64.3989 110.303 65.7603 108.767C64.4088 107.881 62.1591 105.413 60.8716 104.132L50.438 93.6664L32.4394 75.7019C31.0726 74.3229 26.8692 70.3591 26.0915 69.0649C26.8303 67.8768 30.6433 64.2886 31.8788 63.021C35.7116 59.1452 39.5805 55.305 43.485 51.5012C44.778 50.2185 45.9878 48.8602 47.2933 47.5786L53.2022 41.677C54.4621 40.4097 55.735 39.2536 56.8865 37.8835C56.1607 37.2297 52.4046 33.1971 51.9654 33.0327C47.6844 36.8137 42.6838 42.0937 38.6192 46.2176L24.6797 60.1516C22.8569 62.0071 17.2279 67.239 16.055 69.0183C16.4812 70.1266 27.0655 80.399 28.7198 82.042L43.5612 96.9057L53.9304 107.232C55.7727 109.09 58.6532 112.183 60.5598 113.829ZM60.4826 41.5656C58.0236 44.342 55.6728 46.4792 53.0897 49.0777C49.3313 52.8585 45.4295 56.5847 41.822 60.4905C44.1118 62.5798 59.6313 78.7985 60.7911 79.1639C62.8433 76.8915 64.6816 75.1785 66.8155 73.0291L75.9116 63.8663C77.087 62.6904 78.2498 61.6601 79.3939 60.4335C77.6621 58.7078 61.1217 41.8806 60.4826 41.5656ZM108.883 55.2822C107.04 57.8143 104.035 60.4107 101.808 62.6244L88.6725 75.682L76.3971 88.05C74.6601 89.8117 71.3701 93.6109 69.2343 94.8338C68.4241 94.4108 66.1348 91.9659 65.381 91.207L58.5499 84.3314L44.2401 70.052C42.1131 67.8949 40.2062 66.2375 38.2035 63.907C32.5771 70.0095 31.7416 68.232 38.7441 74.5054C39.2322 74.9853 39.6859 75.4734 40.1622 75.9621C49.7279 85.7797 59.63 95.2946 69.2187 105.089C71.0264 103.936 73.0208 101.619 74.5821 100.045L83.4251 91.1082L114.215 60.3951C113.335 59.6437 109.372 55.4349 108.883 55.2822Z" fill="white"></path>
+            </svg>
+            <span className="text-xl font-medium tracking-tight text-white font-geist">CogniCore</span>
+          </a>
+          <p className="text-zinc-500 text-sm font-extralight leading-relaxed font-geist mb-8">Architect, automate, and optimize your workflows using an intelligent engine that assimilates your inputs and perpetually improves.</p>
+          <div className="flex items-center gap-4 text-zinc-500">
+            <a className="hover:text-white transition-colors" href="#">
+              <Icon icon="simple-icons:x" width="20" />
+            </a>
+            <a className="hover:text-white transition-colors" href="#">
+              <Icon icon="simple-icons:github" width="20" />
+            </a>
+            <a className="hover:text-white transition-colors" href="#">
+              <Icon icon="simple-icons:linkedin" width="20" />
+            </a>
+          </div>
+        </div>
+        <div className="flex gap-16 sm:gap-24 flex-wrap">
+          <div className="flex flex-col gap-4">
+            <h4 className="text-white font-medium text-sm tracking-wide font-geist">Product</h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#capabilities">Capabilities</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#architecture">Architecture</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#integrations">Integrations</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#pricing">Pricing</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#changelog">Changelog</a>
+              </li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="text-white font-medium text-sm tracking-wide font-geist">Resources</h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#documentation">Documentation</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#api reference">API Reference</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#case studies">Case Studies</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#blog">Blog</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#community">Community</a>
+              </li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="text-white font-medium text-sm tracking-wide font-geist">Company</h4>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#about us">About Us</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#careers">Careers</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#legal">Legal</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#privacy policy">Privacy Policy</a>
+              </li>
+              <li>
+                <a className="text-zinc-500 hover:text-white text-sm font-extralight transition-colors font-geist" href="#contact">Contact</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-[#27272a]/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-zinc-600 text-xs font-geist">© 2026 CogniCore Inc. All rights reserved.</p>
+        <div className="flex items-center gap-2 text-zinc-600 text-xs font-geist">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          All systems operational
+        </div>
+      </div>
+    </footer>
+  );
+}
