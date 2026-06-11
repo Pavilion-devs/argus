@@ -388,5 +388,18 @@ def run_eval_cmd(
     asyncio.run(run())
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", help="Bind host"),
+    port: int = typer.Option(8000, help="Bind port"),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes (dev)"),
+) -> None:
+    """Run the Argus streaming bridge (FastAPI/SSE) the web dashboard connects to."""
+    from .server import serve as _serve
+
+    console.print(f"[bold]── Argus streaming bridge ──[/bold] http://{host}:{port}")
+    _serve(host=host, port=port, reload=reload)
+
+
 if __name__ == "__main__":
     app()
