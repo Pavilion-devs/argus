@@ -115,6 +115,40 @@ single-agent). Authoritative source: `src/argus/agent.py` + `cli.py` (and the ex
   `/api/detections`: past cases (case_id, verdict, severity, risk, title, date) and the scheduled
   detections Argus auto-deployed (the self-hardening loop's visible output).
 
+### 2.3 — Result presentation: report-first on completion (UX fix)
+
+**Problem:** during a run the live trace (reasoning + SPL feed) is the watchable centerpiece, but
+the moment it completes, the **report** is what the user wants — and right now it's stacked *below*
+the now-historical trace, forcing a long scroll to reach the verdict/risk/timeline. Don't make the
+user navigate to the result; bring the result to them.
+
+**Do this — a Trace ↔ Report toggle that auto-focuses the report on completion:**
+1. Give the main investigation panel a segmented control / tabs: **`[ Trace ]  [ Report ]`**
+   (label them e.g. "Reasoning" / "Verdict" if clearer).
+2. **During the run:** show **Trace** — the live reasoning stream + SPL feed streaming (the part
+   worth watching). Disable/empty the Report tab until the `report` event arrives.
+3. **On the `report` event (completion):** **auto-switch to the `Report` tab** so the verdict,
+   risk gauge, kill-chain, MITRE, attack timeline, entities, and recommended actions land
+   front-and-center with **zero scrolling**. The Trace tab stays one click away ("show me the work").
+4. **Sticky verdict bar:** once a report exists, pin a thin header that's always visible regardless
+   of tab/scroll — verdict badge + risk score + short title. The headline conclusion never leaves
+   the screen.
+5. Keep the **status cards strip** (Complete · N SPL queries · N hypotheses · elapsed) persistent
+   between the toggle and the content — it bridges trace and report.
+
+**Why this over a plain "see result" button:** the result comes to the user automatically (no
+click), the trace stays accessible without dominating the page, and it matches the mental model —
+*"what's the answer"* (Report) vs *"how it got there"* (Trace).
+
+**Lighter fallback (if tabs are too much restructuring):** on completion, auto-collapse the trace
+into a thin `Investigation trace · N queries ▸` accordion at the top and expand the report below it.
+Same report-first effect, smaller change — but the tabs are cleaner and reusable; prefer them.
+
+**Note:** the engine now **resolves the hypothesis ledger** at the end (declare → confirmed/refuted,
+or stays open only when genuinely unsettled), so the `report.hypotheses` and the ledger panel will
+now show real confirmed/refuted statuses instead of all-open — make sure the confirmed (emerald) /
+refuted (red) / open (amber) styling reads well. (Restart `argus serve` to pick this up.)
+
 ---
 
 ## Suggested order (phase 2)
@@ -122,8 +156,9 @@ single-agent). Authoritative source: `src/argus/agent.py` + `cli.py` (and the ex
    raw stream (prove the pipe on the new template).
 2. Port + re-skin the **Investigation Console** (single-agent first, then `--multi` lanes).
 3. Port + re-skin the **Incident Report** + **Evidence drawer**.
-4. Port + re-skin **Response** + **Memory/Detections**.
-5. Polish + the demo run (AWS alert: web_admin / 139.198.18.205).
+4. Wire the **Trace ↔ Report toggle + sticky verdict bar** (§2.3) — report-first on completion.
+5. Port + re-skin **Response** + **Memory/Detections**.
+6. Polish + the demo run (AWS alert: web_admin / 139.198.18.205).
 
 ## Out of scope (for now)
 - Web-based human-in-the-loop approval (auto mode for the demo; CLI has the gate).
