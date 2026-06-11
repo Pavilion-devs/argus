@@ -164,3 +164,36 @@ export interface BlocklistRow {
   added_by?: string;
   added_at: string;
 }
+
+// ---- Evaluation harness (eval/results.json) ---------------------------------
+export interface EvalSummary {
+  scenarios: number;
+  repeat: number;
+  total_runs: number;
+  verdict_accuracy: number;
+  mean_indicator_recall: number;
+  mean_grounding_precision: number;
+  invalid_mitre_techniques: number;
+  mean_queries: number;
+  mean_duration_s: number;
+  model: string;
+  provider: string;
+}
+
+export interface EvalScenario {
+  id: string;
+  runs: number;
+  verdict_pass_rate: number;
+  passes: number;
+  verdict_distribution: Record<string, number>;
+  expected_verdict: string[];
+  mean_indicator_recall: number | null;
+  mean_grounding_precision: number | null;
+  invalid_mitre: number;
+}
+
+export interface EvalResults {
+  summary: EvalSummary | null;
+  per_scenario: EvalScenario[];
+  error?: string;
+}

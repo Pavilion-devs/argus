@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
-type Tab = "investigate" | "memory";
+type Tab = "investigate" | "memory" | "evaluation";
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: "investigate", label: "Live investigation", icon: "solar:pulse-linear" },
   { id: "memory", label: "Memory & hardening", icon: "solar:history-linear" },
+  { id: "evaluation", label: "Evaluation", icon: "solar:chart-square-linear" },
 ];
 
 function SideLink({ href, icon, label }: { href: string; icon: string; label: string }) {
@@ -73,8 +74,7 @@ export default function Sidebar({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => v
 
         <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-zinc-600">Project</div>
         <div className="space-y-1">
-          <SideLink href="/" icon="solar:home-smile-linear" label="Overview" />
-          <SideLink href="/#evaluation" icon="solar:chart-square-linear" label="Evaluation" />
+          <SideLink href="/" icon="solar:home-smile-linear" label="Home" />
           <SideLink href="https://github.com" icon="solar:book-2-linear" label="Docs" />
           <SideLink href="https://github.com" icon="simple-icons:github" label="GitHub" />
         </div>

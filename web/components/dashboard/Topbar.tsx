@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react";
 
-type Tab = "investigate" | "memory";
+type Tab = "investigate" | "memory" | "evaluation";
 
 interface Health {
   mcp?: string;
@@ -42,11 +42,16 @@ const META: Record<Tab, { title: string; sub: string }> = {
     title: "Memory & hardening",
     sub: "Recorded cases, auto-deployed detections, and the active threat blocklist.",
   },
+  evaluation: {
+    title: "Evaluation",
+    sub: "The BOTS v3 benchmark — verdict accuracy, grounding, and per-scenario results.",
+  },
 };
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "investigate", label: "Live", icon: "solar:pulse-linear" },
   { id: "memory", label: "Memory", icon: "solar:history-linear" },
+  { id: "evaluation", label: "Eval", icon: "solar:chart-square-linear" },
 ];
 
 // Full-width sticky header for the dashboard content area (sits to the right of

@@ -21,6 +21,7 @@ import asyncio
 import json
 import uuid
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -225,6 +226,16 @@ async def blocklist() -> dict[str, Any]:
         return {"blocklist": await _engine_list("list_blocklist")}
     except Exception as exc:
         return {"blocklist": [], "error": f"{type(exc).__name__}: {exc}"}
+
+
+@app.get("/api/eval")
+async def eval_results() -> dict[str, Any]:
+    """The committed benchmark results (eval/results.json) — the eval harness output."""
+    try:
+        path = Path(__file__).resolve().parents[2] / "eval" / "results.json"
+        return json.loads(path.read_text())
+    except Exception as exc:
+        return {"summary": None, "per_scenario": [], "results": [], "error": f"{type(exc).__name__}: {exc}"}
 
 
 @app.get("/api/health")
