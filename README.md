@@ -1,3 +1,5 @@
+![Argus product banner](docs/assets/argus-product-banner-v2-light.png)
+
 # Argus — Autonomous SOC Investigation Agent
 
 > An AI agent that autonomously investigates security alerts end-to-end on the
@@ -270,25 +272,6 @@ src/argus/
 data/mitre/techniques.json   # pinned ATT&CK v19.1 catalog (committed, reproducible)
 splunk/argus_response/       # companion Splunk app (KV collections + correlation search)
 ```
-
-## Status
-
-🚧 Active build for the hackathon. The engine is complete and verified end-to-end:
-single- + multi-agent investigation, hypothesis ledger, institutional memory (case
-recall), grounded reports, validated MITRE ATT&CK + kill-chain, composite risk scoring,
-real containment, the self-hardening detection-as-code loop, threat-intel, streaming,
-and the eval harness. A **streaming web UI** is now in [`web/`](web/) — a polished
-Next.js landing page + a live investigation dashboard that streams a real Argus
-investigation (reasoning, SPL, hypotheses, recall, grounded report, response) over SSE
-via a thin FastAPI bridge (`argus serve`). See [`web/README.md`](web/README.md) and
-[`PROJECT.md`](PROJECT.md).
-
-**Evaluation & engineering rigor:** [`EVALUATION.md`](EVALUATION.md) documents the
-6-scenario BOTS v3 benchmark, the measured results (verdict accuracy 1.0, grounding 0.99,
-0 hallucinated ATT&CK ids over 18 runs), and the real bugs the harness caught and we
-root-caused — including a poisoned ground-truth indicator that turned out to be Splunk's
-own data collector. Open limitations: [`issues.md`](issues.md); resolved problems with
-evidence: [`problems.md`](problems.md).
 
 ## License
 
