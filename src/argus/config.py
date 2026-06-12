@@ -54,6 +54,13 @@ class Settings(BaseSettings):
     jira_api_token: str = Field("", alias="JIRA_API_TOKEN")
     jira_project_key: str = Field("SOC", alias="JIRA_PROJECT_KEY")
 
+    # --- Optional: authenticate Splunk alert-action callbacks into argus serve ---
+    # If set, POST /api/splunk/alert requires either:
+    #   Authorization: Bearer <token>
+    # or:
+    #   X-Argus-Token: <token>
+    argus_alert_token: str = Field("", alias="ARGUS_ALERT_TOKEN")
+
     @property
     def splunk_base_url(self) -> str:
         """The splunkd management base URL (e.g. https://localhost:8089),

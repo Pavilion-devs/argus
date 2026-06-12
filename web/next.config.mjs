@@ -10,11 +10,11 @@ const nextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  // The Argus bridge (`argus serve`) runs on :8000. Proxy /api/* to it so the
+  // The Argus bridge (`argus serve`) runs on :8010 by default. Proxy /api/* to it so the
   // browser uses same-origin relative URLs (and SSE) without CORS or hardcoded
   // ports. Override the target with ARGUS_API if the bridge runs elsewhere.
   async rewrites() {
-    const target = process.env.ARGUS_API ?? "http://127.0.0.1:8000";
+    const target = process.env.ARGUS_API ?? "http://127.0.0.1:8010";
     return [{ source: "/api/:path*", destination: `${target}/api/:path*` }];
   },
 };

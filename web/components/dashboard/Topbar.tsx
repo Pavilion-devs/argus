@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react";
 
-type Tab = "investigate" | "memory" | "evaluation";
+type Tab = "investigate" | "memory" | "proof" | "evaluation";
 
 interface Health {
   mcp?: string;
@@ -42,6 +42,10 @@ const META: Record<Tab, { title: string; sub: string }> = {
     title: "Memory & hardening",
     sub: "Recorded cases, auto-deployed detections, and the active threat blocklist.",
   },
+  proof: {
+    title: "SOC proof",
+    sub: "Splunk alert-action jobs and on-demand proof that Argus detections fire.",
+  },
   evaluation: {
     title: "Evaluation",
     sub: "The BOTS v3 benchmark — verdict accuracy, grounding, and per-scenario results.",
@@ -51,6 +55,7 @@ const META: Record<Tab, { title: string; sub: string }> = {
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "investigate", label: "Live", icon: "solar:pulse-linear" },
   { id: "memory", label: "Memory", icon: "solar:history-linear" },
+  { id: "proof", label: "Proof", icon: "solar:shield-check-linear" },
   { id: "evaluation", label: "Eval", icon: "solar:chart-square-linear" },
 ];
 

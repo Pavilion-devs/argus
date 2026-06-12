@@ -1,49 +1,46 @@
-# fab — CogniCore landing page (Next.js)
+# Argus Dashboard
 
-The `cognicore-ai-saas.aura.build` landing page, converted from a single static
-HTML export into a component-based **Next.js 14 (App Router)** app with
-TypeScript and Tailwind CSS.
+Next.js dashboard for the Argus autonomous SOC investigation agent.
+
+The dashboard connects to the Python SSE bridge exposed by `uv run argus serve`.
+It does not simulate investigations: every run streams the same structured events
+emitted by the CLI engine, including reasoning, MCP-backed SPL calls, hypothesis
+updates, memory recall, the grounded report, and gated response actions.
 
 ## Run
 
+From the repository root:
+
 ```bash
-cd fab
+uv run argus serve
+cd web
 npm install
-npm run dev      # http://localhost:3000
-npm run build && npm run start   # production
+npm run dev
 ```
+
+Then open `http://localhost:3000/dashboard`.
 
 ## Structure
 
-```
-app/
-  layout.tsx        Root layout — Inter + Geist fonts, global metadata
-  page.tsx          Composes the page (App → Home wrapper + all sections)
-  globals.css       Tailwind layers + custom scrollbar / .step-bar utility
-components/
-  Navbar.tsx              Fixed glass navbar
-  HeroSection.tsx         Hero with animated step-bar backdrop + masked heading
-  DashboardOverview.tsx   Faux product dashboard mock
-  HowItWorksSection.tsx   Process cards (uses ParticleCanvas)
-  FeaturesSection.tsx     6-up feature grid
-  MetricsSection.tsx      Stats band
-  TestimonialSection.tsx  Customer quotes
-  PricingSection.tsx      Pricing tiers
-  CTASection.tsx          Closing call-to-action
-  Footer.tsx              Footer + social links
-  VerticalLines.tsx       Decorative background lines
-  MaskedText.tsx          Reusable clip-masked heading (word-by-word reveal)
-  ParticleCanvas.tsx      Neural-network particle canvas
-  Animations.tsx          One GSAP/ScrollTrigger controller for all entrance
-                          animations (reveal / stagger / masked-word)
+```text
+app/dashboard/page.tsx              Live investigation workspace
+components/dashboard/ReasoningStream.tsx
+components/dashboard/SplFeed.tsx
+components/dashboard/HypothesisLedger.tsx
+components/dashboard/ReportPanel.tsx
+components/dashboard/EvidenceDrawer.tsx
+components/dashboard/ResponsePanel.tsx
+components/dashboard/MemoryTab.tsx
+components/dashboard/EvalPanel.tsx
+components/dashboard/ProofPanel.tsx      Alert-action jobs + detection proof
+lib/useInvestigation.ts             SSE stream state machine
+lib/api.ts                          Read endpoint helpers
 ```
 
 ## Notes
 
-- **Icons** use `@iconify/react` (`solar` + `simple-icons` sets), loaded from
-  the Iconify API on the client — the same behaviour as the original export.
-- **Animations** are driven by GSAP + ScrollTrigger, wired through the class
-  hooks (`reveal-element`, `stagger-item`, `masked-word`) preserved in the
-  markup. They respect `prefers-reduced-motion`.
-- **Images** are remote Unsplash URLs via plain `<img>` (kept as-is from the
-  source).
+- Next rewrites `/api/*` to the Argus bridge; see `next.config.mjs`.
+- The response panel uses a real approval gate. Approving an action lets the
+  backend write to Splunk KV store, deploy detections, or call configured
+  integrations.
+- The evaluation tab reads the committed `eval/results.json` through the bridge.
