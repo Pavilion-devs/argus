@@ -5,8 +5,8 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│  CLI · WEB UI (web/ + argus serve SSE bridge)   investigate [--multi] [--respond]│
-│  live token-by-token streaming of agent reasoning + SPL + results + report      │
+│  CLI · WEB UI · ARGUS MCP SERVER (argus mcp)   investigate [--multi] [--respond]│
+│  live streaming UI + reusable MCP tools for external SOC copilots/apps          │
 └───────────────────────────────┬────────────────────────────────────────────────┘
                                 │
 ┌───────────────────────────────▼────────────────────────────────────────────────┐
@@ -27,6 +27,8 @@
 │        kill-chain · composite risk score · case-memory linkage                   │
 │   Structured incident report: verdict · severity · risk · timeline · kill-chain  │
 │   Eval harness: verdict accuracy · recall · grounding precision · ATT&CK validity│
+│   Argus MCP tools: investigate_alert · recall_memory · cases · detections ·      │
+│        gated response execution                                                  │
 └───────┬───────────────────────────────────────┬───────────────┬─────────────────┘
         │ reads Splunk ONLY via MCP               │ enrich        │ contain + harden
         │                                         ▼               ▼
@@ -49,7 +51,8 @@
 
 ## Data flow (one investigation)
 
-1. An alert (or NL request) enters the orchestrator. Argus **recalls its case memory**
+1. An alert (or NL request) enters the orchestrator from the CLI, web UI, or
+   **Argus's own MCP server** (`argus mcp`). Argus **recalls its case memory**
    for any indicator already named in the alert (`recall_memory`).
 2. **Investigation reads Splunk only through the MCP Server**: the agent generates SPL,
    runs `splunk_run_query`, reads real results, and pivots — looping until confident. It
@@ -65,10 +68,15 @@
 5. With `--respond`, the **Response Engine** executes real, gated actions: writes offending
    indicators to a Splunk KV-store blocklist (REST, enforced by a **correlation search**),
    records a case, posts Slack/Jira — and for a confirmed true positive **deploys a new
-   scheduled detection** (detection-as-code) so Splunk auto-alerts on recurrence.
+   scheduled detection** (detection-as-code) so Splunk auto-alerts on recurrence. Detection
+   SPL is dry-run through MCP before saving, and Argus can run deployed detections on
+   demand (`argus detections --run`) to prove they fire.
 6. The **eval harness** scores accuracy: verdict accuracy, indicator recall, grounding
    precision (every reported IOC verified to exist in the data), and ATT&CK validity.
 
 > Investigation is 100% MCP-native. Containment writes go via the authenticated Splunk
-> KV-store REST API (the MCP server's safe-SPL allowlist is intentionally read-only).
+> KV-store REST API (the Splunk MCP server's safe-SPL allowlist is intentionally
+> read-only). Argus can also publish its own higher-level MCP tools so an existing
+> SOC copilot can call the full investigation workflow instead of integrating a
+> bespoke API.
 ```

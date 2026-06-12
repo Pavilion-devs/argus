@@ -7,10 +7,16 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+.python-version
 
 # Env / secrets
 .env
 .env.local
+.envrc
 *.pem
 *.token
 
@@ -20,6 +26,9 @@ node_modules/
 web/.next/
 web/dist/
 web/build/
+web/.vercel/
+web/.turbo/
+web/coverage/
 # stray Next.js build output (the app lives in web/)
 /fab/
 
@@ -30,13 +39,25 @@ splunk/apps/botsv3/
 splunk/apps/splunk-mcp-server/
 splunk-var/
 splunk-etc/
+*.splunk.log
+var/log/splunk/
 
 # Cases / local state
 *.sqlite
 *.db
 data/cases/
+*.pid
+*.log
+*.out
 
 # OS / editor
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# Local one-offs / generated captures
+/image.png
+/web/public/media/

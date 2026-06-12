@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
-type Tab = "investigate" | "memory" | "evaluation";
+type Tab = "investigate" | "memory" | "proof" | "evaluation";
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: "investigate", label: "Live investigation", icon: "solar:pulse-linear" },
   { id: "memory", label: "Memory & hardening", icon: "solar:history-linear" },
+  { id: "proof", label: "SOC proof", icon: "solar:shield-check-linear" },
   { id: "evaluation", label: "Evaluation", icon: "solar:chart-square-linear" },
 ];
 

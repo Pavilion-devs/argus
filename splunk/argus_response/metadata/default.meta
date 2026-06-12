@@ -13,3 +13,6 @@ export = system
 
 [savedsearches]
 export = system
+
+[alert_actions]
+export = system

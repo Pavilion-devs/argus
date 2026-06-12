@@ -90,8 +90,8 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
 
 - ✅ **Single-sample per scenario — RESOLVED** (see [`problems.md`](problems.md) P1): added
   `argus eval --repeat K` reporting per-scenario verdict pass-rates + distributions.
-- ✅ **`results.json` now reflects a multi-sample run** (`--repeat 3`, 9 investigations:
-  verdict_accuracy 1.0, grounding 0.989, 0 invalid MITRE). It carries a `per_scenario` pass-rate
+- ✅ **`results.json` now reflects a multi-sample run** (`--repeat 3`, 18 investigations:
+  verdict_accuracy 1.0, grounding 0.987, 0 invalid MITRE). It carries a `per_scenario` pass-rate
   block. Note this is 3 samples/scenario — a strong signal, not a guarantee of 100% forever; run
   a higher `--repeat` for tighter confidence intervals.
 - 🟠 **Ground truth was existence-validated, not malice-validated (systemic).** `validate_ground_truth`
@@ -118,12 +118,18 @@ Severity: 🔴 high · 🟠 medium · 🟢 low/cosmetic · 🔵 not-yet-built (k
   adaptive throttling/backoff beyond the SDK defaults. Heavy `--multi` concurrency (4
   specialists + synthesis) could approach account limits.
 
+## Productization / integration
+
+- ✅ **Streaming web UI — BUILT.** The Next.js dashboard in `web/` streams real
+  investigation events from `argus serve`: reasoning, SPL, hypotheses, recall,
+  grounded report, evidence drill-down, response approvals, memory, and eval results.
+- ✅ **Argus MCP server — BUILT.** `argus mcp` exposes Argus as reusable MCP tools
+  (`argus_investigate_alert`, memory/case/detection listing, and gated response
+  execution), so existing SOC copilots can call the full workflow instead of
+  integrating a bespoke API.
+
 ## Not yet built (known gaps)
 
-- 🔵 **Streaming web UI.** The flagship demo surface is still CLI-only. Everything the UI
-  needs is already emitted as structured stream events (`thinking`, `tool_call`,
-  `hypothesis`, `recall`, `report`, `action_executed`, …) — the backend is ready, the
-  frontend isn't.
 - 🔵 **Semantic case recall (embeddings).** See "Institutional memory" above.
 - 🔵 **Detection efficacy proof.** We deploy detections but don't yet demonstrate one
   *firing* on replayed data end-to-end (would be a strong demo beat if the detection targets

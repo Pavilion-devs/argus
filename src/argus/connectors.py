@@ -220,13 +220,34 @@ class ResponseEngine:
         earliest: str = "-65m@m",
         rationale: str = "",
         case_id: str = "",
+        validate_with_mcp: bool = True,
     ) -> dict[str, Any]:
         """Install a NEW scheduled correlation search in the argus_response app via
         the Splunk REST API, so Splunk auto-alerts if this attack pattern recurs.
-        The SPL is validated read-only before deployment."""
+        The SPL is validated read-only and dry-run through MCP before deployment."""
         ok, why = _is_read_only_spl(search)
         if not ok:
             return {"ok": False, "error": f"refused unsafe detection SPL ({why})"}
+        dry_run: dict[str, Any] = {"checked": False}
+        if validate_with_mcp:
+            if self.mcp is None:
+                dry_run = {"checked": False, "skipped": True, "reason": "no MCP client available"}
+            else:
+                try:
+                    result = await self.mcp.run_query(
+                        search, earliest_time=earliest, latest_time="now", row_limit=1
+                    )
+                    dry_run = {
+                        "checked": True,
+                        "ok": True,
+                        "sample": self.mcp.text_content(result)[:1000],
+                    }
+                except Exception as exc:
+                    return {
+                        "ok": False,
+                        "error": f"detection SPL failed MCP dry-run: {type(exc).__name__}: {exc}",
+                        "dry_run": {"checked": True, "ok": False},
+                    }
         full = name if name.startswith(_DETECTION_PREFIX) else f"{_DETECTION_PREFIX} {name}"
         body = {
             "name": full,
@@ -257,6 +278,7 @@ class ResponseEngine:
             "status": resp.status_code,
             "name": full,
             "detail": None if ok else resp.text[:300],
+            "dry_run": dry_run,
         }
 
     async def list_detections(self) -> list[dict[str, Any]]:
@@ -278,8 +300,76 @@ class ResponseEngine:
                 "cron_schedule": content.get("cron_schedule", ""),
                 "is_scheduled": content.get("is_scheduled"),
                 "description": content.get("description", ""),
+                "dispatch_earliest_time": content.get("dispatch.earliest_time", "-24h"),
+                "dispatch_latest_time": content.get("dispatch.latest_time", "now"),
             })
         return out
+
+    async def run_deployed_detections(
+        self,
+        *,
+        name: str = "",
+        earliest: str | None = None,
+        latest: str | None = None,
+        row_limit: int = 20,
+    ) -> dict[str, Any]:
+        """Run Argus-authored detections on demand through MCP.
+
+        This is the demo/proof path for detection-as-code: after Argus deploys a
+        saved search, this executes the saved SPL and reports whether it returns
+        matches on the current Splunk instance.
+        """
+        if self.mcp is None:
+            return {"ok": False, "error": "no MCP client available"}
+        detections = await self.list_detections()
+        if name:
+            needle = name.lower()
+            detections = [
+                d for d in detections
+                if needle in (d.get("name") or "").lower()
+                or needle in (d.get("description") or "").lower()
+            ]
+        runs: list[dict[str, Any]] = []
+        for det in detections:
+            spl = det.get("search") or ""
+            det_earliest = earliest or det.get("dispatch_earliest_time") or "-24h"
+            det_latest = latest or det.get("dispatch_latest_time") or "now"
+            try:
+                res = await self.mcp.run_query(
+                    spl,
+                    earliest_time=det_earliest,
+                    latest_time=det_latest,
+                    row_limit=row_limit,
+                )
+                text = self.mcp.text_content(res)
+                rows = []
+                try:
+                    rows = json.loads(text or "{}").get("results", [])
+                except Exception:
+                    rows = []
+                runs.append({
+                    "ok": True,
+                    "name": det.get("name"),
+                    "search": spl,
+                    "earliest": det_earliest,
+                    "latest": det_latest,
+                    "match_count": len(rows),
+                    "matches": rows,
+                    "raw": text[:4000],
+                })
+            except Exception as exc:
+                runs.append({
+                    "ok": False,
+                    "name": det.get("name"),
+                    "search": spl,
+                    "error": f"{type(exc).__name__}: {exc}",
+                })
+        return {
+            "ok": all(r.get("ok") for r in runs),
+            "detections_checked": len(runs),
+            "detections_matched": sum(1 for r in runs if r.get("match_count", 0) > 0),
+            "runs": runs,
+        }
 
     # ---- Enforcement (MCP-native, read-only) -------------------------------
     async def run_enforcement(self) -> dict[str, Any]:

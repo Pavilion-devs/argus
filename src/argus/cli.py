@@ -237,14 +237,49 @@ def cases() -> None:
 
 
 @app.command()
-def detections() -> None:
-    """List the detections Argus has auto-deployed (the self-hardening loop's output)."""
+def detections(
+    run_now: bool = typer.Option(False, "--run", help="Run deployed detections now via MCP"),
+    name: str = typer.Option("", "--name", help="Filter detections by name/description"),
+    earliest: str = typer.Option("", help="Override earliest time when using --run"),
+    latest: str = typer.Option("", help="Override latest time when using --run"),
+    limit: int = typer.Option(20, help="Row limit per detection when using --run"),
+) -> None:
+    """List or run the detections Argus has auto-deployed."""
     from .connectors import ResponseEngine
 
     async def run() -> None:
         async with _client() as c:
             engine = ResponseEngine(get_settings(), c)
             try:
+                if run_now:
+                    data = await engine.run_deployed_detections(
+                        name=name,
+                        earliest=earliest or None,
+                        latest=latest or None,
+                        row_limit=limit,
+                    )
+                    table = Table("Detection", "OK", "Matches", "Window", "SPL / Error")
+                    for r in data.get("runs", []):
+                        ok = "[green]✓[/green]" if r.get("ok") else "[red]✗[/red]"
+                        window = (
+                            f"{r.get('earliest', '')} → {r.get('latest', '')}"
+                            if r.get("ok")
+                            else ""
+                        )
+                        detail = (r.get("search") or r.get("error") or "")[:80]
+                        table.add_row(
+                            r.get("name", ""),
+                            ok,
+                            str(r.get("match_count", "—")),
+                            window,
+                            detail,
+                        )
+                    console.print(table)
+                    console.print(JSON(json.dumps({
+                        "detections_checked": data.get("detections_checked"),
+                        "detections_matched": data.get("detections_matched"),
+                    })))
+                    return
                 rows = await engine.list_detections()
             finally:
                 await engine.aclose()
@@ -391,7 +426,7 @@ def run_eval_cmd(
 @app.command()
 def serve(
     host: str = typer.Option("127.0.0.1", help="Bind host"),
-    port: int = typer.Option(8000, help="Bind port"),
+    port: int = typer.Option(8010, help="Bind port"),
     reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes (dev)"),
 ) -> None:
     """Run the Argus streaming bridge (FastAPI/SSE) the web dashboard connects to."""
@@ -399,6 +434,30 @@ def serve(
 
     console.print(f"[bold]── Argus streaming bridge ──[/bold] http://{host}:{port}")
     _serve(host=host, port=port, reload=reload)
+
+
+@app.command(name="mcp")
+def run_mcp_server(
+    transport: str = typer.Option(
+        "stdio",
+        help="MCP transport: stdio, sse, or streamable-http",
+    ),
+    host: str = typer.Option("127.0.0.1", help="Bind host for HTTP transports"),
+    port: int = typer.Option(8765, help="Bind port for HTTP transports"),
+) -> None:
+    """Run Argus as an MCP server for SOC copilots and other MCP hosts."""
+    from .mcp_server import run as _run_mcp
+
+    allowed = {"stdio", "sse", "streamable-http"}
+    if transport not in allowed:
+        console.print(f"[red]transport must be one of:[/red] {', '.join(sorted(allowed))}")
+        raise typer.Exit(1)
+    if transport == "stdio":
+        # MCP stdio clients expect protocol messages on stdout; avoid extra console output.
+        _run_mcp(transport="stdio")
+    else:
+        console.print(f"[bold]── Argus MCP server ──[/bold] {transport} http://{host}:{port}")
+        _run_mcp(transport=transport, host=host, port=port)
 
 
 if __name__ == "__main__":

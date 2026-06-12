@@ -153,6 +153,8 @@ export interface DetectionRow {
   cron_schedule: string;
   is_scheduled: boolean | string;
   description: string;
+  dispatch_earliest_time?: string;
+  dispatch_latest_time?: string;
 }
 
 export interface BlocklistRow {
@@ -195,5 +197,39 @@ export interface EvalScenario {
 export interface EvalResults {
   summary: EvalSummary | null;
   per_scenario: EvalScenario[];
+  error?: string;
+}
+
+export interface SplunkAlertJob {
+  ok: boolean;
+  job_id: string;
+  status: "queued" | "running" | "done" | "error";
+  search_name?: string | null;
+  sid?: string | null;
+  auto_respond?: boolean;
+  case_id?: string;
+  case_key?: string;
+  events?: number;
+  report?: Report;
+  error?: string;
+}
+
+export interface DetectionRun {
+  ok: boolean;
+  name: string;
+  search: string;
+  earliest?: string;
+  latest?: string;
+  match_count?: number;
+  matches?: Record<string, unknown>[];
+  raw?: string;
+  error?: string;
+}
+
+export interface DetectionRunResult {
+  ok: boolean;
+  detections_checked: number;
+  detections_matched: number;
+  runs: DetectionRun[];
   error?: string;
 }

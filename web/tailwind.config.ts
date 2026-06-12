@@ -13,7 +13,7 @@ const config: Config = {
         geist: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
-      // Argus dashboard palette — the same dark-zinc/blue CogniCore template tokens
+      // Argus dashboard palette.
       // the marketing pages use (just named), extended with threat-severity colors.
       colors: {
         ink: "#030303",
