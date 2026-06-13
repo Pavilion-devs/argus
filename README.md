@@ -39,7 +39,6 @@ For the Splunk-native demo path:
 
 - Saved search -> custom alert action -> Argus webhook: [`docs/SPLUNK_ALERT_ACTION.md`](docs/SPLUNK_ALERT_ACTION.md)
 - Detection dry-run + on-demand proof: [`docs/DETECTION_PROOF.md`](docs/DETECTION_PROOF.md)
-- Benchmark and rigor: [`EVALUATION.md`](EVALUATION.md)
 - Submission narrative: [`submission.md`](submission.md)
 
 ## Why It Stands Out
