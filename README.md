@@ -21,6 +21,23 @@ Built for the **Splunk Agentic Ops Hackathon** — Security track.
 
 ---
 
+## Table of Contents
+
+- [Quick Path](#quick-path)
+- [Why It Stands Out](#why-it-stands-out)
+- [What it does](#what-it-does)
+- [Architecture](#architecture)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Usage](#usage)
+- [Argus as an MCP server](#argus-as-an-mcp-server)
+  - [Use Argus from Claude Code](#use-argus-from-claude-code-or-any-mcp-host)
+  - [Hosted demo endpoint (for judges)](#hosted-demo-endpoint-for-judges)
+- [Project layout](#project-layout)
+- [License](#license)
+
+---
+
 ## Quick Path
 
 If you want the shortest path through the project:
@@ -63,27 +80,6 @@ does three things together:
 - **It leaves the SOC better than it found it.** After a confirmed true
   positive, Argus can contain the threat and install the detection that catches
   the recurrence.
-
-## What Is Real
-
-This repo is not limited to mocked investigation output. The core paths are
-implemented and exercised end to end:
-
-- **Investigation reads** go through the **Splunk MCP Server**.
-- **Response writes** go to Splunk KV store and scheduled searches through the
-  authenticated REST API.
-- **Splunk integration** is packaged in [`splunk/argus_response/`](splunk/argus_response/),
-  including a custom alert action and demo saved search.
-- **Reusable MCP integration** is available through `uv run argus mcp`.
-- **Detection proof** is available through the CLI, API, and dashboard **SOC proof**
-  tab, so Argus-authored detections can be executed on demand against live data.
-
-## Why Argus
-
-A Tier-1 analyst spends 30–60 minutes manually pivoting across Splunk to triage one
-notable. Argus does the same investigation autonomously in minutes, never skips a
-pivot, and **proves every claim** with the SPL and events behind it — then it can
-contain the threat.
 
 ## What it does
 
