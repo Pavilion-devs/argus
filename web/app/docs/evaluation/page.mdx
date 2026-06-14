@@ -1,0 +1,72 @@
+export const metadata = { title: "Evaluation" };
+
+<Eyebrow>Reference</Eyebrow>
+
+# Evaluation
+
+Argus's core claim is that every conclusion is provable from the data it queried. That
+claim is only credible if the agent is **measured, not asserted** — and measured
+honestly. A benchmark that only ever shows green isn't measuring anything.
+
+## The harness
+
+Run the evaluation against curated **Boss of the SOC (BOTS) v3** scenarios with known
+ground truth:
+
+```bash
+uv run argus eval --repeat 3
+```
+
+For each scenario the harness runs a full, real, autonomous investigation against live
+Splunk (via MCP) and measures:
+
+| Metric | What it proves |
+| --- | --- |
+| **Verdict accuracy** | Does Argus reach the right true/false-positive call? (benign controls included so it doesn't cry wolf) |
+| **Indicator recall** | Did it surface the key ground-truth IOCs? |
+| **Grounding precision** | Does *every* concrete IOC it reports actually exist in the data? (an automated zero-hallucination check) |
+| **ATT&CK validity** | How many reported MITRE technique ids are invalid? (validated against the pinned ATT&CK catalog — target: 0) |
+| **Efficiency** | Queries run and wall-clock per investigation |
+
+Two design choices make the numbers trustworthy:
+
+- **Multi-sampling (`--repeat K`).** A single run of a non-deterministic agent is one noisy draw. `--repeat K` runs each scenario K times and reports a verdict pass-rate, so a borderline scenario shows up as `2/3`, not a misleading `pass`.
+- **Data-verified ground truth.** Every expected indicator is confirmed to exist in `botsv3` *and* curated as verified-malicious.
+
+## The benchmark
+
+Six scenarios: four attacks plus two precision controls.
+
+| Scenario | Type | Verdict |
+| --- | --- | --- |
+| `aws_cred_abuse` | IAM credential abuse | true_positive |
+| `endpoint_malware` | Endpoint malware | true_positive |
+| `s3_public_exposure` | Cloud data exposure | true_positive |
+| `coinminer_cryptojacking` | Cryptojacking | true_positive |
+| `benign_dns_control` | Precision control | false_positive |
+| `benign_aws_recon_control` | Precision control | false_positive |
+
+The two benign controls are deliberate: a SOC agent that flags real attacks but also
+cries wolf on its own monitoring is useless. They test **precision** — and they have
+caught the agent over-calling more than once.
+
+## Results
+
+Latest `argus eval --repeat 3` — **18 real investigations** (3 per scenario):
+
+| Aggregate | Value |
+| --- | --- |
+| Verdict accuracy | **1.0** |
+| Mean indicator recall | **0.917** |
+| Grounding precision | **0.987** |
+| Invalid ATT&CK techniques | **0** |
+| Efficiency | ~22 queries / ~3 min per investigation |
+
+<Callout type="tip" title="The harness earns its keep">
+The benchmark repeatedly caught real problems — including in its own ground truth. One
+"malicious" IP turned out to be Splunk's own benign data-collection account
+(`splunk_access`). We fixed the metric instead of forcing a false positive, and made
+benign verdicts a first-class successful outcome.
+</Callout>
+
+See [Grounding & evidence](/docs/grounding) for why these metrics are the right ones.

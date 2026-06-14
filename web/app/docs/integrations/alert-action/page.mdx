@@ -1,0 +1,46 @@
+export const metadata = { title: "Splunk alert action" };
+
+<Eyebrow>Integrations</Eyebrow>
+
+# Splunk alert action
+
+Argus is reusable as infrastructure: a Splunk **custom alert action** lets any saved
+search trigger a full investigation. When the search fires, Splunk posts the alert to
+Argus, which investigates end to end and records the result.
+
+The action ships in the `argus_response` app (`bin/argus_investigate.py` plus the
+`alert_actions.conf` definition).
+
+## How it works
+
+1. A saved search in Splunk fires.
+2. Its **Argus alert action** posts the alert payload to the Argus bridge at `POST /api/splunk/alert`.
+3. Argus starts a background investigation and returns a job id.
+4. Poll the job for status and the grounded result.
+
+```text
+POST /api/splunk/alert        → start an investigation, returns a job id
+GET  /api/splunk/alert/{id}   → investigation job status + result
+```
+
+## Run the bridge
+
+The alert action posts to the Argus streaming bridge:
+
+```bash
+uv run argus serve --host 0.0.0.0 --port 8010
+```
+
+## Authenticate the callback
+
+If `ARGUS_ALERT_TOKEN` is set, the Splunk alert action must send the same token, and
+Argus rejects any unauthenticated callback.
+
+```bash
+ARGUS_ALERT_TOKEN=<shared-secret>
+```
+
+<Callout type="tip" title="Closes the loop">
+Pair this with [detection-as-code](/docs/response): a detection Argus deployed can use
+this same alert action to auto-investigate its own future matches.
+</Callout>

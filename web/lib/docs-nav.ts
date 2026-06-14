@@ -54,6 +54,41 @@ export const docsNav: DocGroup[] = [
         slug: "/docs/cli",
         summary: "investigate, multi-agent mode, gated response, detections, and the Argus MCP server.",
       },
+      {
+        title: "Response & containment",
+        slug: "/docs/response",
+        summary: "The gated write path: blocklist, cases, detection-as-code, and approval.",
+      },
+    ],
+  },
+  {
+    title: "Integrations",
+    items: [
+      {
+        title: "Splunk MCP Server",
+        slug: "/docs/integrations/splunk-mcp",
+        summary: "The read path. Argus runs all investigation SPL through the MCP Server.",
+      },
+      {
+        title: "Splunk REST & KV-store",
+        slug: "/docs/integrations/splunk-rest",
+        summary: "The write path: KV collections and the blocklist-enforcement correlation search.",
+      },
+      {
+        title: "Splunk alert action",
+        slug: "/docs/integrations/alert-action",
+        summary: "Trigger an Argus investigation from any Splunk saved search.",
+      },
+      {
+        title: "Argus MCP server",
+        slug: "/docs/integrations/argus-mcp",
+        summary: "Expose Argus as MCP tools so other SOC copilots can call it.",
+      },
+      {
+        title: "Threat intel",
+        slug: "/docs/integrations/threat-intel",
+        summary: "Live indicator enrichment with AbuseIPDB, VirusTotal, and ip-api.",
+      },
     ],
   },
   {
@@ -63,6 +98,11 @@ export const docsNav: DocGroup[] = [
         title: "Configuration",
         slug: "/docs/configuration",
         summary: "Environment variables for the model provider, Splunk, and threat intel.",
+      },
+      {
+        title: "Evaluation",
+        slug: "/docs/evaluation",
+        summary: "The benchmark, metrics, and results: measured honestly, not asserted.",
       },
     ],
   },

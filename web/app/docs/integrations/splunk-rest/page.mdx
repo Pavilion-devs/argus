@@ -1,0 +1,45 @@
+export const metadata = { title: "Splunk REST & KV-store" };
+
+<Eyebrow>Integrations</Eyebrow>
+
+# Splunk REST & KV-store
+
+Containment is the **write path**, and it deliberately does not go through MCP (which is
+read-only). Instead, Argus uses Splunk's authenticated REST API to persist state in
+KV-store collections and to deploy detections.
+
+All of this ships as a Splunk app, `argus_response`, which defines the collections, the
+enforcement search, and the alert action.
+
+## KV-store collections
+
+| Collection | Holds |
+| --- | --- |
+| `argus_threat_blocklist` | Active blocked indicators (IP / user / domain / hash), each with the case that added it. |
+| `argus_cases` | Recorded investigations — Argus's institutional memory. |
+
+Argus recalls both at the start of every investigation, so a repeat offender or an
+already-blocked indicator surfaces immediately.
+
+```bash
+uv run argus cases   # list recorded cases
+```
+
+## Blocklist enforcement
+
+The `argus_response` app installs a **blocklist-enforcement correlation search**. When
+Argus writes an indicator to `argus_threat_blocklist`, that scheduled search matches new
+events against the blocklist and raises a notable — so a block is actually *enforced*,
+not just recorded.
+
+## Detection-as-code
+
+On a confirmed true positive, Argus deploys a new scheduled saved search into the
+`argus_response` app. The SPL is verified **read-only** and **dry-run through the MCP
+Server** before it is saved. See [Response & containment](/docs/response) for the full
+flow.
+
+<Callout type="note" title="One token, two paths">
+The same `SPLUNK_TOKEN` authorizes both the MCP read path and these REST writes. The
+separation is by API surface (read-only MCP vs. gated REST), not by credential.
+</Callout>
