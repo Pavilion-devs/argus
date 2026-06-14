@@ -165,8 +165,11 @@ Guidance:
   IPs, compromised/abused accounts, known-bad domains/hashes). Do NOT block the victim's \
   own legitimate infrastructure or internal service accounts unless they are confirmed \
   compromised and actively malicious.
-- Use `notify_slack` to send the SOC a concise summary of the incident and the actions taken.
-- Use `create_ticket` to open a tracking ticket for follow-up remediation.
+- Keep blocks tight: block each confirmed-malicious indicator once (typically the attacker \
+  source IP and the compromised account). Do not issue redundant or speculative blocks.
+- Notification tools (`notify_slack`, `create_ticket`) are OPTIONAL and appear only when \
+  configured. If they are in your toolset you may send a concise summary or open a ticket; if \
+  they are absent, skip notification entirely and focus on containment and hardening.
 - For a confirmed true positive, use `deploy_detection` to install ONE durable, read-only SPL \
   detection that would catch this attack pattern if it recurs — generalize from the behavior you \
   observed (e.g. the access-denied burst, the masquerading process name), not the exact \

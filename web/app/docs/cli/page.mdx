@@ -1,0 +1,80 @@
+export const metadata = { title: "CLI reference" };
+
+<Eyebrow>Using Argus</Eyebrow>
+
+# CLI reference
+
+Argus ships a single `argus` command (run with `uv run argus <command>`). The most
+important commands are below.
+
+## investigate
+
+Run a full autonomous investigation on an alert, and optionally respond.
+
+```bash
+uv run argus investigate "<alert or question>" [options]
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--multi` | off | Use the four-specialist multi-agent team (auth, network, endpoint, intel). |
+| `--respond` | off | Run the gated response / containment phase after the verdict. |
+| `--auto` | off | Auto-execute response actions without per-action prompts. |
+| `--max-turns` | `12` | Max agent turns (per specialist in `--multi`). |
+
+```bash
+# Investigate, contain, and harden — unattended
+uv run argus investigate "AWS IAM abuse from web_admin" --respond --auto
+```
+
+## detections
+
+List or run the read-only detections Argus has auto-deployed (detection-as-code).
+
+```bash
+uv run argus detections [--run] [--name <text>] [--earliest <t>] [--latest <t>] [--limit <n>]
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `--run` | off | Run the deployed detections now, through the MCP Server. |
+| `--name` | — | Filter detections by name or description. |
+| `--earliest` / `--latest` | — | Override the search time window when using `--run`. |
+| `--limit` | `20` | Row limit per detection when using `--run`. |
+
+```bash
+# Prove the deployed detections fire over all time
+uv run argus detections --run --earliest 0
+```
+
+## serve
+
+Run the streaming bridge (FastAPI / SSE) that the web dashboard connects to.
+
+```bash
+uv run argus serve --host 127.0.0.1 --port 8010
+```
+
+## argus mcp
+
+Run Argus itself as an MCP server, so SOC copilots and other MCP hosts can call the
+full investigation workflow as tools.
+
+```bash
+uv run argus mcp --transport stdio        # default, for local MCP hosts
+uv run argus mcp --transport streamable-http --port 8765
+```
+
+## Other commands
+
+| Command | Description |
+| --- | --- |
+| `argus check` | Verify connectivity to the Splunk MCP Server. |
+| `argus query "<spl>"` | Run a one-off SPL query through the MCP Server. |
+| `argus cases` | List recorded cases (institutional memory). |
+| `argus monitor` | Poll a detection for new notables. |
+| `argus eval` | Run the evaluation harness over the curated scenarios. |
+| `argus mitre-sync` | Rebuild the pinned MITRE ATT&CK technique catalog. |
+
+See [Configuration](/docs/configuration) for the environment variables these commands
+read.

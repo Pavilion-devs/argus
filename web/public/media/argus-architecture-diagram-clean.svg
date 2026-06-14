@@ -1,0 +1,429 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1644 1010" font-family="Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap');
+      text { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+      .mono { font-family: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace; }
+    </style>
+
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f6f8fc"/>
+    </linearGradient>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#172554"/>
+      <stop offset="0.5" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0 H0 V34" fill="none" stroke="#eaf0f8" stroke-width="1"/>
+    </pattern>
+
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="13" flood-color="#1e293b" flood-opacity="0.10"/>
+    </filter>
+    <filter id="softsm" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#1e293b" flood-opacity="0.08"/>
+    </filter>
+
+    <marker id="arrSlate" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0 0 L6.5 3 L0 6 Z" fill="#475569"/></marker>
+    <marker id="arrGray" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#cbd5e1"/></marker>
+    <marker id="arrSky" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#38bdf8"/></marker>
+    <marker id="arrCobalt" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 Z" fill="#2563eb"/></marker>
+
+    <symbol id="logo" viewBox="0 0 122 122">
+      <rect x="0" y="0" width="122" height="122" rx="28" fill="url(#logoGrad)"/>
+      <g transform="translate(20,20) scale(0.672)">
+        <path fill="#ffffff" d="M60.4611 0C61.0499 0.182365 61.4958 0.581291 61.932 1.00347C67.9008 6.78239 73.764 12.7327 79.6201 18.6163L100.82 39.7775L113.405 52.4022C115.784 54.765 119.138 57.8427 121.218 60.3321C120.271 61.7905 118.945 62.8395 117.728 64.0602C100.451 81.3917 83.0922 98.6452 65.8455 116.004C64.2031 117.658 62.3346 119.147 60.9732 121.041C60.6276 120.962 60.2016 120.865 59.9465 120.616C55.0782 115.858 50.278 111.003 45.4822 106.17L23.3978 84.0723L9.47885 70.1915C7.48282 68.2534 5.51432 66.287 3.5741 64.2929C2.45906 63.167 0.959912 61.7321 0 60.5347C1.00705 58.8554 7.63278 52.6975 9.4554 50.853L42.0558 18.2108L54.8635 5.38662C56.0216 4.2361 59.3118 0.815429 60.4611 0ZM7.13702 60.5546C8.60706 62.0661 10.8746 64.1931 12.1628 65.6756C13.1185 64.1867 16.0214 61.5641 17.3569 60.2562L24.2749 53.3464L38.0102 39.5641C39.5013 38.095 41.4016 35.9705 42.8966 34.6706C44.988 32.6796 49.8461 27.3421 51.9035 26.0575C53.7333 27.2433 57.7857 31.6026 59.5196 33.3394L74.7666 48.5854C76.7955 50.6181 80.8724 54.9486 82.9467 56.6435C84.0647 55.7266 87.0272 53.1121 87.6793 51.9665C87.7427 51.0196 76.7964 40.5924 75.2973 39.0426C69.1901 32.7289 62.8377 26.5734 56.6619 20.3199C56.0812 19.7368 52.0402 15.5103 51.9733 15.4849C48.7738 18.4992 45.4505 22.0117 42.3193 25.1361L21.9285 45.5496C19.2708 48.2186 16.5189 50.8968 13.8747 53.5841C11.9757 55.514 8.65557 58.4733 7.13702 60.5546ZM55.4309 12.0689C57.6008 13.7129 59.5464 16.0794 61.4969 17.9592C63.9881 20.3604 66.3483 22.8379 68.7851 25.2595L78.8355 35.1965C80.4446 36.8147 81.9917 38.5273 83.6231 40.1208L89.5895 46.0595C91.4524 47.889 93.5472 49.608 94.9914 51.7677C94.1486 53.3099 90.7923 56.1612 89.3489 57.6255L73.2747 73.8293C70.7027 76.3972 66.6705 80.1298 64.4204 82.8376C65.3441 83.9356 67.977 87.0522 69.1554 87.5773C69.6538 87.5274 69.459 87.5922 69.8974 87.2815C73.3393 84.4322 76.5661 80.2578 79.7859 77.1889C87.4061 69.926 94.8807 62.4825 102.178 54.8946C103.284 53.744 104.514 53.1543 105.435 51.8077C104.408 50.5298 102.121 48.3966 100.883 47.1773L93.3055 39.6713L69.8324 16.1348C68.9634 15.2543 60.9287 7.09619 60.472 6.91968C58.8637 8.71855 57.0589 10.1637 55.4309 12.0689ZM60.5598 113.829C60.6435 113.822 60.7447 113.814 60.8634 113.804C62.2943 112.217 64.3989 110.303 65.7603 108.767C64.4088 107.881 62.1591 105.413 60.8716 104.132L50.438 93.6664L32.4394 75.7019C31.0726 74.3229 26.8692 70.3591 26.0915 69.0649C26.8303 67.8768 30.6433 64.2886 31.8788 63.021C35.7116 59.1452 39.5805 55.305 43.485 51.5012C44.778 50.2185 45.9878 48.8602 47.2933 47.5786L53.2022 41.677C54.4621 40.4097 55.735 39.2536 56.8865 37.8835C56.1607 37.2297 52.4046 33.1971 51.9654 33.0327C47.6844 36.8137 42.6838 42.0937 38.6192 46.2176L24.6797 60.1516C22.8569 62.0071 17.2279 67.239 16.055 69.0183C16.4812 70.1266 27.0655 80.399 28.7198 82.042L43.5612 96.9057L53.9304 107.232C55.7727 109.09 58.6532 112.183 60.5598 113.829ZM60.4826 41.5656C58.0236 44.342 55.6728 46.4792 53.0897 49.0777C49.3313 52.8585 45.4295 56.5847 41.822 60.4905C44.1118 62.5798 59.6313 78.7985 60.7911 79.1639C62.8433 76.8915 64.6816 75.1785 66.8155 73.0291L75.9116 63.8663C77.087 62.6904 78.2498 61.6601 79.3939 60.4335C77.6621 58.7078 61.1217 41.8806 60.4826 41.5656ZM108.883 55.2822C107.04 57.8143 104.035 60.4107 101.808 62.6244L88.6725 75.682L76.3971 88.05C74.6601 89.8117 71.3701 93.6109 69.2343 94.8338C68.4241 94.4108 66.1348 91.9659 65.381 91.207L58.5499 84.3314L44.2401 70.052C42.1131 67.8949 40.2062 66.2375 38.2035 63.907C32.5771 70.0095 31.7416 68.232 38.7441 74.5054C39.2322 74.9853 39.6859 75.4734 40.1622 75.9621C49.7279 85.7797 59.63 95.2946 69.2187 105.089C71.0264 103.936 73.0208 101.619 74.5821 100.045L83.4251 91.1082L114.215 60.3951C113.335 59.6437 109.372 55.4349 108.883 55.2822Z"/>
+      </g>
+    </symbol>
+
+    <!-- micro icon library (24x24 viewBox, stroke inherits currentColor) -->
+    <symbol id="ic-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17.5" cy="8" r="2.4"/><path d="M15.5 15c3 0 5 1.7 5 5"/></symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 7-7 8-3.5-1-7-3-7-8V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+    <symbol id="ic-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></symbol>
+    <symbol id="ic-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/></symbol>
+    <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3 4 14h6l-1 7 9-11h-6z"/></symbol>
+    <symbol id="ic-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M16 16l5 5"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 7H4c0-1 2-2 2-7Z"/><path d="M10 20a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="ic-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="ic-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.3"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="ic-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 4 3 12 0 16M12 4c-3 4-3 12 0 16"/></symbol>
+    <symbol id="ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="ic-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/></symbol>
+    <symbol id="ic-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.6"/><path d="M12 12l6-6"/></symbol>
+    <symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M10.5 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13.5 18l-1 1a4 4 0 0 1-6-6l1-1"/></symbol>
+    <symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M4 12h12M4 18h7"/><path d="M19 5l1.5 1.5L23 4" transform="translate(-1 0)"/></symbol>
+    <symbol id="ic-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+    <symbol id="ic-nodes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.5 9.7l3.4 6.2M16.5 9.7l-3.4 6.2M8.4 8h7.2"/></symbol>
+    <symbol id="ic-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
+    <symbol id="ic-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18a7 7 0 1 1 14 0"/><path d="M12 18l4-4"/></symbol>
+    <symbol id="ic-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/></symbol>
+    <symbol id="ic-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 21V12M12 12l8-4.5M12 12L4 7.5"/></symbol>
+  </defs>
+
+  <!-- ===================== BACKGROUND ===================== -->
+  <rect x="0" y="0" width="1644" height="1010" fill="url(#bgGrad)"/>
+  <rect x="0" y="0" width="1644" height="1010" fill="url(#grid)" opacity="0.75"/>
+  <g opacity="0.9">
+    <ellipse cx="380" cy="980" rx="420" ry="150" fill="#dbeafe" opacity="0.40" filter="url(#blur)"/>
+    <ellipse cx="1300" cy="1000" rx="470" ry="160" fill="#e0f2fe" opacity="0.38" filter="url(#blur)"/>
+    <ellipse cx="800" cy="1030" rx="340" ry="120" fill="#ede9fe" opacity="0.30" filter="url(#blur)"/>
+  </g>
+
+  <!-- ===================== HEADER ===================== -->
+  <use href="#logo" x="48" y="40" width="44" height="44"/>
+  <text x="104" y="68" font-size="40" font-weight="800" fill="#172554" letter-spacing="-1">Argus</text>
+  <text x="106" y="92" font-size="15" font-weight="600" fill="#64748b">Autonomous SOC investigation on Splunk</text>
+  <text x="48" y="132" font-size="13.5" font-weight="500" fill="#94a3b8">Grounded by evidence.&#160;&#160;MCP-native by design.&#160;&#160;Hardened by response.</text>
+
+  <!-- Splunk partner logo, far right of header -->
+  <image href="data:image/png;base64,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" x="1448" y="36" width="156" height="59"/>
+
+  <!-- ===================== LEFT RAIL ===================== -->
+  <!-- Card A: Analysts (cobalt) -->
+  <g filter="url(#softsm)">
+    <rect x="40" y="192" width="218" height="176" rx="16" fill="#f6f9ff" stroke="#cdddfb"/>
+  </g>
+  <rect x="58" y="206" width="34" height="34" rx="9" fill="#dbeafe"/>
+  <use href="#ic-people" x="64" y="212" width="22" height="22" color="#2563eb"/>
+  <text x="100" y="226" font-size="12.5" font-weight="700" letter-spacing="1.2" fill="#2563eb">ANALYSTS</text>
+  <text x="60" y="262" font-size="12.5" font-weight="500" fill="#475569">Launch investigations</text>
+  <text x="60" y="280" font-size="12.5" font-weight="500" fill="#475569">from a Splunk alert.</text>
+  <g>
+    <rect x="58" y="292" width="184" height="30" rx="8" fill="#ffffff" stroke="#c7d7fb"/>
+    <use href="#ic-bolt" x="68" y="299" width="15" height="15" color="#2563eb"/>
+    <text x="90" y="311" font-size="11.5" font-weight="600" fill="#1e3a8a">Start Investigation</text>
+  </g>
+  <g>
+    <rect x="58" y="328" width="184" height="30" rx="8" fill="#ffffff" stroke="#c7d7fb"/>
+    <use href="#ic-search" x="68" y="335" width="15" height="15" color="#2563eb"/>
+    <text x="90" y="347" font-size="11.5" font-weight="600" fill="#1e3a8a">Inspect Evidence</text>
+  </g>
+
+  <!-- Card B: Responders (sky) -->
+  <g filter="url(#softsm)">
+    <rect x="40" y="386" width="218" height="140" rx="16" fill="#f3fcff" stroke="#bae6fd"/>
+  </g>
+  <rect x="58" y="400" width="34" height="34" rx="9" fill="#cffafe"/>
+  <use href="#ic-shield" x="64" y="406" width="22" height="22" color="#0891b2"/>
+  <text x="100" y="420" font-size="12.5" font-weight="700" letter-spacing="1.2" fill="#0891b2">RESPONDERS</text>
+  <text x="60" y="456" font-size="12.5" font-weight="500" fill="#475569">Review the verdict and</text>
+  <text x="60" y="474" font-size="12.5" font-weight="500" fill="#475569">approve containment.</text>
+  <g>
+    <rect x="58" y="484" width="184" height="32" rx="8" fill="#ecfeff" stroke="#a5d4e6"/>
+    <use href="#ic-bolt" x="68" y="492" width="16" height="16" color="#0891b2"/>
+    <text x="91" y="505" font-size="12" font-weight="700" fill="#0e7490">Run Response</text>
+  </g>
+
+  <!-- Card C: Admins (slate) -->
+  <g filter="url(#softsm)">
+    <rect x="40" y="536" width="218" height="176" rx="16" fill="#f7f9fc" stroke="#cdd6e3"/>
+  </g>
+  <rect x="58" y="550" width="34" height="34" rx="9" fill="#e2e8f0"/>
+  <use href="#ic-folder" x="64" y="556" width="22" height="22" color="#475569"/>
+  <text x="100" y="570" font-size="12.5" font-weight="700" letter-spacing="1.2" fill="#475569">ADMINS</text>
+  <text x="60" y="606" font-size="12.5" font-weight="500" fill="#475569">Browse cases, detections</text>
+  <text x="60" y="624" font-size="12.5" font-weight="500" fill="#475569">&amp; hardening outputs.</text>
+  <g>
+    <rect x="58" y="636" width="184" height="30" rx="8" fill="#ffffff" stroke="#cdd6e3"/>
+    <use href="#ic-folder" x="68" y="643" width="15" height="15" color="#475569"/>
+    <text x="90" y="655" font-size="11.5" font-weight="600" fill="#334155">View Cases</text>
+  </g>
+  <g>
+    <rect x="58" y="672" width="184" height="30" rx="8" fill="#ffffff" stroke="#cdd6e3"/>
+    <use href="#ic-radar" x="68" y="679" width="15" height="15" color="#475569"/>
+    <text x="90" y="691" font-size="11.5" font-weight="600" fill="#334155">View Detections</text>
+  </g>
+
+  <!-- left rail arrows into browser -->
+  <text x="316" y="272" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">Investigation Path</text>
+  <path d="M260 280 H372" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrSlate)"/>
+  <text x="316" y="444" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">Response Path</text>
+  <path d="M260 452 H372" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrSlate)"/>
+  <text x="316" y="616" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">Operations Path</text>
+  <path d="M260 624 H372" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrSlate)"/>
+
+  <!-- ===================== CENTER BROWSER ===================== -->
+  <g filter="url(#soft)">
+    <rect x="380" y="176" width="600" height="474" rx="16" fill="#ffffff" stroke="#e2e8f0"/>
+  </g>
+  <!-- chrome bar -->
+  <path d="M380 192 a16 16 0 0 1 16 -16 h568 a16 16 0 0 1 16 16 v22 H380 Z" fill="#f8fafc"/>
+  <line x1="380" y1="214" x2="980" y2="214" stroke="#eef2f7"/>
+  <circle cx="402" cy="195" r="5" fill="#ff5f57"/>
+  <circle cx="420" cy="195" r="5" fill="#febc2e"/>
+  <circle cx="438" cy="195" r="5" fill="#28c840"/>
+  <rect x="476" y="184" width="430" height="22" rx="11" fill="#ffffff" stroke="#e8edf3"/>
+  <path d="M490 199 v-4 a3 3 0 0 1 6 0 v4 Z M488 199 h10 v5 h-10 Z" fill="#94a3b8"/>
+  <text x="505" y="199" font-size="11" font-weight="500" fill="#64748b">argus.local/dashboard</text>
+  <path d="M872 190 h14 M872 195 h14 M872 200 h14" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round"/>
+
+  <!-- Panel TL: Investigation console -->
+  <rect x="398" y="226" width="274" height="200" rx="10" fill="#ffffff" stroke="#eef2f7"/>
+  <text x="414" y="252" font-size="13" font-weight="700" fill="#1e293b">Investigation console</text>
+  <text x="414" y="269" font-size="10.5" font-weight="500" fill="#94a3b8">Live reasoning stream</text>
+  <g>
+    <rect x="414" y="280" width="132" height="19" rx="6" fill="#eff6ff" stroke="#dbeafe"/>
+    <use href="#ic-terminal" x="419" y="283" width="13" height="13" color="#2563eb"/>
+    <text x="436" y="293" font-size="9.5" font-weight="600" fill="#2563eb" class="mono">splunk_run_query</text>
+  </g>
+  <circle cx="418" cy="318" r="3" fill="#2563eb"/><rect x="428" y="314.5" width="214" height="7" rx="3.5" fill="#eef2f7"/>
+  <circle cx="418" cy="336" r="3" fill="#cbd5e1"/><rect x="428" y="332.5" width="178" height="7" rx="3.5" fill="#eef2f7"/>
+  <circle cx="418" cy="354" r="3" fill="#cbd5e1"/><rect x="428" y="350.5" width="200" height="7" rx="3.5" fill="#eef2f7"/>
+  <circle cx="418" cy="372" r="3" fill="#38bdf8"/><rect x="428" y="368.5" width="150" height="7" rx="3.5" fill="#eef2f7"/>
+  <g>
+    <rect x="414" y="386" width="172" height="20" rx="6" fill="#ecfdf5" stroke="#bbf7d0"/>
+    <path d="M423 396 l3 3 5-6" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="436" y="400" font-size="9.5" font-weight="600" fill="#15803d">Hypothesis confirmed</text>
+  </g>
+  <text x="414" y="419" font-size="9.5" font-weight="500" fill="#b8c2cf">alert context · case memory</text>
+
+  <!-- Panel TR: SPL and hypothesis loop -->
+  <rect x="688" y="226" width="274" height="200" rx="10" fill="#ffffff" stroke="#eef2f7"/>
+  <text x="704" y="252" font-size="13" font-weight="700" fill="#1e293b">SPL &amp; hypothesis loop</text>
+  <text x="704" y="269" font-size="10.5" font-weight="500" fill="#94a3b8">plan → act → observe</text>
+  <rect x="704" y="278" width="242" height="68" rx="8" fill="#f8fafc" stroke="#eef2f7"/>
+  <text x="716" y="298" font-size="10.5" class="mono"><tspan fill="#2563eb">index</tspan><tspan fill="#64748b">=aws_cloudtrail</tspan></text>
+  <text x="716" y="316" font-size="10.5" class="mono"><tspan fill="#94a3b8">| </tspan><tspan fill="#0891b2">stats</tspan><tspan fill="#64748b"> count by src_ip</tspan></text>
+  <text x="716" y="334" font-size="10.5" class="mono"><tspan fill="#94a3b8">| </tspan><tspan fill="#0891b2">where</tspan><tspan fill="#64748b"> count > 100</tspan></text>
+  <path d="M706 362 l3 3 5-6" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="720" y="366" font-size="10.5" font-weight="600" fill="#334155">leaked key used externally</text>
+  <path d="M707 380 l6 6 M713 380 l-6 6" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+  <text x="720" y="389" font-size="10.5" font-weight="500" fill="#94a3b8">benign data-collector</text>
+  <text x="704" y="416" font-size="9.5" font-weight="500" fill="#b8c2cf">every query linked to its evidence</text>
+
+  <!-- Panel BL: Grounded report -->
+  <rect x="398" y="438" width="274" height="198" rx="10" fill="#ffffff" stroke="#eef2f7"/>
+  <text x="414" y="464" font-size="13" font-weight="700" fill="#1e293b">Grounded report</text>
+  <g>
+    <rect x="414" y="474" width="104" height="20" rx="6" fill="#fff1ed" stroke="#fed7c4"/>
+    <text x="466" y="488" font-size="10" font-weight="700" fill="#c2410c" text-anchor="middle">TRUE POSITIVE</text>
+    <rect x="524" y="474" width="44" height="20" rx="6" fill="#fee2e2" stroke="#fecaca"/>
+    <text x="546" y="488" font-size="10" font-weight="700" fill="#b91c1c" text-anchor="middle">HIGH</text>
+  </g>
+  <text x="414" y="516" font-size="10" font-weight="600" fill="#64748b">attack timeline</text>
+  <line x1="418" y1="538" x2="540" y2="538" stroke="#dbe3ee" stroke-width="2"/>
+  <circle cx="420" cy="538" r="4" fill="#2563eb"/><circle cx="460" cy="538" r="4" fill="#38bdf8"/><circle cx="500" cy="538" r="4" fill="#f59e0b"/><circle cx="538" cy="538" r="4" fill="#dc2626"/>
+  <rect x="414" y="556" width="118" height="18" rx="5" fill="#f1f5f9"/>
+  <text x="423" y="568" font-size="9.5" font-weight="600" fill="#475569" class="mono">139.198.18.205</text>
+  <rect x="414" y="580" width="74" height="18" rx="5" fill="#f1f5f9"/>
+  <text x="423" y="592" font-size="9.5" font-weight="600" fill="#475569" class="mono">web_admin</text>
+  <text x="414" y="620" font-size="9.5" font-weight="500" fill="#b8c2cf">every claim links to SPL &amp; events</text>
+  <!-- risk donut -->
+  <circle cx="616" cy="540" r="30" fill="none" stroke="#eef2f7" stroke-width="8"/>
+  <circle cx="616" cy="540" r="30" fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round" stroke-dasharray="164 188" transform="rotate(-90 616 540)"/>
+  <text x="616" y="544" font-size="19" font-weight="800" fill="#172554" text-anchor="middle">87</text>
+  <text x="616" y="588" font-size="9.5" font-weight="600" fill="#94a3b8" text-anchor="middle">risk / 100</text>
+
+  <!-- Panel BR: Response and hardening -->
+  <rect x="688" y="438" width="274" height="198" rx="10" fill="#ffffff" stroke="#eef2f7"/>
+  <text x="704" y="464" font-size="13" font-weight="700" fill="#1e293b">Response &amp; hardening</text>
+  <text x="704" y="481" font-size="10.5" font-weight="500" fill="#94a3b8">contain · record · deploy</text>
+  <!-- row 1 -->
+  <use href="#ic-ban" x="704" y="497" width="16" height="16" color="#475569"/>
+  <text x="726" y="509" font-size="11.5" font-weight="600" fill="#334155">KV blocklist</text>
+  <rect x="884" y="498" width="62" height="18" rx="9" fill="#ecfdf5" stroke="#bbf7d0"/>
+  <text x="915" y="511" font-size="9.5" font-weight="700" fill="#15803d" text-anchor="middle">enforced</text>
+  <!-- row 2 -->
+  <use href="#ic-folder" x="704" y="525" width="16" height="16" color="#475569"/>
+  <text x="726" y="537" font-size="11.5" font-weight="600" fill="#334155">Case recorded</text>
+  <path d="M920 533 l4 4 8-8" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- row 3 -->
+  <use href="#ic-radar" x="704" y="553" width="16" height="16" color="#475569"/>
+  <text x="726" y="565" font-size="11.5" font-weight="600" fill="#334155">Detection deployed</text>
+  <rect x="882" y="554" width="64" height="18" rx="9" fill="#eff6ff" stroke="#dbeafe"/>
+  <text x="914" y="567" font-size="9.5" font-weight="700" fill="#2563eb" text-anchor="middle">scheduled</text>
+  <!-- live match stat -->
+  <rect x="704" y="586" width="242" height="26" rx="7" fill="#fff8f1" stroke="#fde2c4"/>
+  <circle cx="720" cy="599" r="4" fill="#f59e0b"/>
+  <text x="734" y="603" font-size="11" font-weight="700" fill="#b45309">1 live match</text>
+  <text x="828" y="603" font-size="10" font-weight="500" fill="#a98246">detection fired on recurrence</text>
+
+  <!-- dashed arrows down to bottom callouts -->
+  <path d="M474 652 V676" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 4" marker-end="url(#arrGray)"/>
+  <path d="M680 652 V676" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 4" marker-end="url(#arrGray)"/>
+  <path d="M886 652 V676" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 4" marker-end="url(#arrGray)"/>
+
+  <!-- ===================== RIGHT RAIL ===================== -->
+  <g transform="translate(22,0)">
+  <!-- chevrons center -> right -->
+  <text x="1023" y="238" font-size="10.5" font-weight="600" fill="#0891b2" text-anchor="middle">SPL via MCP</text>
+  <path d="M1000 258 L1018 275 L1000 292 L1010 292 L1028 275 L1010 258 Z" fill="#38bdf8" stroke-linejoin="round"/>
+  <text x="1023" y="434" font-size="10.5" font-weight="600" fill="#2563eb" text-anchor="middle">Model reasoning</text>
+  <path d="M1000 454 L1018 471 L1000 488 L1010 488 L1028 471 L1010 454 Z" fill="#2563eb" stroke-linejoin="round"/>
+  <text x="1023" y="617" font-size="10.5" font-weight="600" fill="#475569" text-anchor="middle">Contain &amp; harden</text>
+  <path d="M1000 637 L1018 654 L1000 671 L1010 671 L1028 654 L1010 637 Z" fill="#475569" stroke-linejoin="round"/>
+
+  </g>
+
+  <g transform="translate(56,0)">
+  <!-- Right Card A: Splunk Enterprise (sky) -->
+  <g filter="url(#softsm)"><rect x="1066" y="182" width="300" height="186" rx="14" fill="#ffffff" stroke="#bae6fd"/></g>
+  <rect x="1086" y="198" width="34" height="34" rx="9" fill="#cffafe"/>
+  <use href="#ic-db" x="1092" y="204" width="22" height="22" color="#0891b2"/>
+  <text x="1130" y="214" font-size="15" font-weight="700" fill="#1e293b">Splunk Enterprise</text>
+  <text x="1130" y="230" font-size="10.5" font-weight="500" fill="#94a3b8">BOTS v3 · 2M+ events</text>
+  <use href="#ic-search" x="1086" y="248" width="15" height="15" color="#0891b2"/><text x="1108" y="259" font-size="11.5" font-weight="500" fill="#475569">indexes &amp; saved searches</text>
+  <use href="#ic-bell" x="1086" y="271" width="15" height="15" color="#0891b2"/><text x="1108" y="282" font-size="11.5" font-weight="500" fill="#475569">notable &amp; risk events</text>
+  <use href="#ic-grid" x="1086" y="294" width="15" height="15" color="#0891b2"/><text x="1108" y="305" font-size="11.5" font-weight="500" fill="#475569">BOTS v3 dataset</text>
+  <use href="#ic-layers" x="1086" y="317" width="15" height="15" color="#0891b2"/><text x="1108" y="328" font-size="11.5" font-weight="500" fill="#475569">correlation searches</text>
+  <use href="#ic-db" x="1086" y="340" width="15" height="15" color="#0891b2"/><text x="1108" y="351" font-size="11.5" font-weight="500" fill="#475569">KV-store collections</text>
+
+  <!-- Right Card B: Models & enrichment (cobalt) -->
+  <g filter="url(#softsm)"><rect x="1066" y="386" width="300" height="170" rx="14" fill="#ffffff" stroke="#cdddfb"/></g>
+  <rect x="1086" y="402" width="34" height="34" rx="9" fill="#dbeafe"/>
+  <use href="#ic-cpu" x="1092" y="408" width="22" height="22" color="#2563eb"/>
+  <text x="1130" y="418" font-size="15" font-weight="700" fill="#1e293b">Models &amp; enrichment</text>
+  <text x="1130" y="434" font-size="10.5" font-weight="500" fill="#94a3b8">reasoning + threat intel</text>
+  <use href="#ic-cpu" x="1086" y="452" width="15" height="15" color="#2563eb"/><text x="1108" y="463" font-size="11.5" font-weight="500" fill="#475569">Claude Sonnet 4.6 · Bedrock</text>
+  <use href="#ic-target" x="1086" y="475" width="15" height="15" color="#2563eb"/><text x="1108" y="486" font-size="11.5" font-weight="500" fill="#475569">MITRE ATT&amp;CK catalog</text>
+  <use href="#ic-globe" x="1086" y="498" width="15" height="15" color="#2563eb"/><text x="1108" y="509" font-size="11.5" font-weight="500" fill="#475569">AbuseIPDB · VirusTotal</text>
+  <use href="#ic-pin" x="1086" y="521" width="15" height="15" color="#2563eb"/><text x="1108" y="532" font-size="11.5" font-weight="500" fill="#475569">ip-api geolocation</text>
+
+  <!-- Right Card C: Response engine (slate) -->
+  <g filter="url(#softsm)"><rect x="1066" y="574" width="300" height="160" rx="14" fill="#ffffff" stroke="#cdd6e3"/></g>
+  <rect x="1086" y="590" width="34" height="34" rx="9" fill="#e2e8f0"/>
+  <use href="#ic-bolt" x="1092" y="596" width="22" height="22" color="#475569"/>
+  <text x="1130" y="606" font-size="15" font-weight="700" fill="#1e293b">Response engine</text>
+  <text x="1130" y="622" font-size="10.5" font-weight="500" fill="#94a3b8">real, gated actions</text>
+  <use href="#ic-ban" x="1086" y="640" width="15" height="15" color="#475569"/><text x="1108" y="651" font-size="11.5" font-weight="500" fill="#475569">KV blocklist (REST)</text>
+  <use href="#ic-folder" x="1086" y="663" width="15" height="15" color="#475569"/><text x="1108" y="674" font-size="11.5" font-weight="500" fill="#475569">case store</text>
+  <use href="#ic-radar" x="1086" y="686" width="15" height="15" color="#475569"/><text x="1108" y="697" font-size="11.5" font-weight="500" fill="#475569">deployed detections</text>
+  <use href="#ic-link" x="1086" y="709" width="15" height="15" color="#475569"/><text x="1108" y="720" font-size="11.5" font-weight="500" fill="#475569">Slack · Jira actions</text>
+
+  <!-- dashed outcome cards + thin out-arrows -->
+  <path d="M1366 275 H1402" fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrGray)"/>
+  <rect x="1406" y="238" width="150" height="74" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="5 4"/>
+  <use href="#ic-cube" x="1422" y="256" width="22" height="22" color="#0891b2"/>
+  <text x="1452" y="271" font-size="11.5" font-weight="700" fill="#334155">Splunk</text>
+  <text x="1452" y="287" font-size="11.5" font-weight="700" fill="#334155">data</text>
+
+  <path d="M1366 471 H1402" fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrGray)"/>
+  <rect x="1406" y="434" width="150" height="74" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="5 4"/>
+  <use href="#ic-link" x="1422" y="452" width="22" height="22" color="#2563eb"/>
+  <text x="1452" y="467" font-size="11.5" font-weight="700" fill="#334155">Intel</text>
+  <text x="1452" y="483" font-size="11.5" font-weight="700" fill="#334155">signals</text>
+
+  <path d="M1366 654 H1402" fill="none" stroke="#94a3b8" stroke-width="1.4" marker-end="url(#arrGray)"/>
+  <rect x="1406" y="617" width="150" height="74" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="5 4"/>
+  <use href="#ic-shield" x="1422" y="635" width="22" height="22" color="#475569"/>
+  <text x="1452" y="650" font-size="11.5" font-weight="700" fill="#334155">Cases &amp;</text>
+  <text x="1452" y="666" font-size="11.5" font-weight="700" fill="#334155">detections</text>
+
+  </g>
+
+  <!-- ===================== BOTTOM CALLOUTS ===================== -->
+  <g filter="url(#softsm)"><rect x="380" y="678" width="188" height="104" rx="13" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <rect x="396" y="694" width="30" height="30" rx="8" fill="#eff6ff"/>
+  <use href="#ic-search" x="401" y="699" width="20" height="20" color="#2563eb"/>
+  <text x="436" y="712" font-size="12.5" font-weight="700" fill="#1e293b">Grounded evidence</text>
+  <text x="396" y="744" font-size="10.5" font-weight="500" fill="#64748b">Every claim links to the exact</text>
+  <text x="396" y="760" font-size="10.5" font-weight="500" fill="#64748b">SPL and the events behind it.</text>
+
+  <g filter="url(#softsm)"><rect x="586" y="678" width="188" height="104" rx="13" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <rect x="602" y="694" width="30" height="30" rx="8" fill="#f3fcff"/>
+  <use href="#ic-clock" x="607" y="699" width="20" height="20" color="#0891b2"/>
+  <text x="642" y="712" font-size="12.5" font-weight="700" fill="#1e293b">Institutional memory</text>
+  <text x="602" y="744" font-size="10.5" font-weight="500" fill="#64748b">Prior cases &amp; the live blocklist</text>
+  <text x="602" y="760" font-size="10.5" font-weight="500" fill="#64748b">surface repeat offenders fast.</text>
+
+  <g filter="url(#softsm)"><rect x="792" y="678" width="188" height="104" rx="13" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <rect x="808" y="694" width="30" height="30" rx="8" fill="#f7f9fc"/>
+  <use href="#ic-radar" x="813" y="699" width="20" height="20" color="#475569"/>
+  <text x="848" y="712" font-size="12.5" font-weight="700" fill="#1e293b">Detection-as-code</text>
+  <text x="808" y="744" font-size="10.5" font-weight="500" fill="#64748b">A confirmed true positive</text>
+  <text x="808" y="760" font-size="10.5" font-weight="500" fill="#64748b">writes a scheduled detection.</text>
+
+  <!-- ===================== CAPABILITY STRIP ===================== -->
+  <g filter="url(#soft)"><rect x="40" y="806" width="1564" height="126" rx="16" fill="#ffffff" stroke="#eef2f7"/></g>
+  <text x="66" y="862" font-size="15" font-weight="700" fill="#1e293b">Argus capabilities</text>
+  <text x="66" y="882" font-size="11" font-weight="500" fill="#94a3b8">Full feature set · MCP-native</text>
+  <line x1="290" y1="828" x2="290" y2="910" stroke="#eef2f7"/>
+
+  <!-- 11 chips -->
+  <g>
+    <rect x="316" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-list" x="321" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="332" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Hypothesis</text><text x="332" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">ledger</text>
+  </g>
+  <g>
+    <rect x="428" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-clock" x="433" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="444" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Memory</text><text x="444" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">recall</text>
+  </g>
+  <g>
+    <rect x="540" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-nodes" x="545" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="556" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Multi-agent</text><text x="556" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">mode</text>
+  </g>
+  <g>
+    <rect x="652" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-terminal" x="657" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="668" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">SPL</text><text x="668" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">execution</text>
+  </g>
+  <g>
+    <rect x="764" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-globe" x="769" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="780" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Threat</text><text x="780" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">intel</text>
+  </g>
+  <g>
+    <rect x="876" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-shield" x="881" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="892" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">MITRE</text><text x="892" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">validation</text>
+  </g>
+  <g>
+    <rect x="988" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-gauge" x="993" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="1004" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Risk</text><text x="1004" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">scoring</text>
+  </g>
+  <g>
+    <rect x="1100" y="836" width="32" height="32" rx="9" fill="#eff6ff"/><use href="#ic-search" x="1105" y="841" width="22" height="22" color="#2563eb"/>
+    <text x="1116" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Evidence</text><text x="1116" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">drill-down</text>
+  </g>
+  <line x1="1182" y1="828" x2="1182" y2="910" stroke="#eef2f7"/>
+  <g>
+    <rect x="1212" y="836" width="32" height="32" rx="9" fill="#ecfeff"/><use href="#ic-ban" x="1217" y="841" width="22" height="22" color="#0891b2"/>
+    <text x="1228" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Blocklist</text><text x="1228" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">enforce</text>
+  </g>
+  <g>
+    <rect x="1324" y="836" width="32" height="32" rx="9" fill="#ecfeff"/><use href="#ic-radar" x="1329" y="841" width="22" height="22" color="#0891b2"/>
+    <text x="1340" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Detection</text><text x="1340" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">deploy</text>
+  </g>
+  <g>
+    <rect x="1436" y="836" width="32" height="32" rx="9" fill="#ecfeff"/><use href="#ic-doc" x="1441" y="841" width="22" height="22" color="#0891b2"/>
+    <text x="1452" y="894" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">Reporting</text><text x="1452" y="906" font-size="9.5" font-weight="600" fill="#475569" text-anchor="middle">&amp; export</text>
+  </g>
+
+  <!-- ===================== LEGEND ===================== -->
+  <line x1="66" y1="956" x2="98" y2="956" stroke="#38bdf8" stroke-width="2.4" marker-end="url(#arrSky)"/>
+  <text x="108" y="960" font-size="11.5" font-weight="600" fill="#475569">Splunk data — SPL via MCP Server</text>
+  <line x1="392" y1="956" x2="424" y2="956" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arrCobalt)"/>
+  <text x="434" y="960" font-size="11.5" font-weight="600" fill="#475569">Reasoning &amp; enrichment — Claude · threat intel</text>
+  <line x1="788" y1="956" x2="820" y2="956" stroke="#475569" stroke-width="2.4" marker-end="url(#arrSlate)"/>
+  <text x="830" y="960" font-size="11.5" font-weight="600" fill="#475569">Response &amp; compute — containment · hardening</text>
+  <text x="1604" y="950" font-size="11" font-weight="500" fill="#94a3b8" text-anchor="end">Argus reads Splunk through the MCP Server. Containment writes via gated REST.</text>
+  <text x="1604" y="966" font-size="11" font-weight="500" fill="#94a3b8" text-anchor="end">Every verdict grounded in real events.</text>
+
+  <!-- ===================== HAPPY-PATH SPINE (overlay) ===================== -->
+  <!-- top ribbon: the core investigation to response loop -->
+  <text x="680" y="146" font-size="9.5" font-weight="700" letter-spacing="1.6" fill="#94a3b8" text-anchor="middle">HOW ARGUS WORKS</text>
+  <g font-size="11.5" font-weight="600" fill="#1e293b">
+    <circle cx="467" cy="162" r="9" fill="#172554"/><text x="467" y="166" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">1</text><text x="481" y="166">Alert</text>
+    <text x="526" y="166" font-size="12" fill="#cbd5e1" text-anchor="middle">→</text>
+    <circle cx="545" cy="162" r="9" fill="#172554"/><text x="545" y="166" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">2</text><text x="559" y="166">Investigate</text>
+    <text x="638" y="166" font-size="12" fill="#cbd5e1" text-anchor="middle">→</text>
+    <circle cx="657" cy="162" r="9" fill="#172554"/><text x="657" y="166" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">3</text><text x="671" y="166">Verdict</text>
+    <text x="728" y="166" font-size="12" fill="#cbd5e1" text-anchor="middle">→</text>
+    <circle cx="747" cy="162" r="9" fill="#172554"/><text x="747" y="166" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">4</text><text x="761" y="166">Contain</text>
+    <text x="822" y="166" font-size="12" fill="#cbd5e1" text-anchor="middle">→</text>
+    <circle cx="841" cy="162" r="9" fill="#172554"/><text x="841" y="166" font-size="11" font-weight="800" fill="#ffffff" text-anchor="middle">5</text><text x="855" y="166">Harden</text>
+  </g>
+  <!-- node badges pinning each step to the layout -->
+  <g>
+    <circle cx="44" cy="196" r="14" fill="#172554" stroke="#ffffff" stroke-width="2.5"/><text x="44" y="201" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">1</text>
+    <circle cx="398" cy="226" r="14" fill="#172554" stroke="#ffffff" stroke-width="2.5"/><text x="398" y="231" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">2</text>
+    <circle cx="398" cy="438" r="14" fill="#172554" stroke="#ffffff" stroke-width="2.5"/><text x="398" y="443" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">3</text>
+    <circle cx="688" cy="438" r="14" fill="#172554" stroke="#ffffff" stroke-width="2.5"/><text x="688" y="443" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">4</text>
+    <circle cx="792" cy="678" r="14" fill="#172554" stroke="#ffffff" stroke-width="2.5"/><text x="792" y="683" font-size="15" font-weight="800" fill="#ffffff" text-anchor="middle">5</text>
+  </g>
+</svg>

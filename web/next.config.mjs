@@ -1,3 +1,7 @@
+import createMDX from "@next/mdx";
+import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -5,6 +9,8 @@ const nextConfig = {
   // reader.read() never yields incremental chunks (the live stream would
   // arrive all at once at the end).
   compress: false,
+  // Allow .md/.mdx files to be treated as routes/pages (docs live in app/docs/**).
+  pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
@@ -19,4 +25,11 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [rehypeSlug],
+  },
+});
+
+export default withMDX(nextConfig);

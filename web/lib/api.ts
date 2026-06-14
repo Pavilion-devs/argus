@@ -10,8 +10,14 @@ import type {
   SplunkAlertJob,
 } from "./types";
 
+// In production the browser calls the Argus backend directly — set
+// NEXT_PUBLIC_ARGUS_API to e.g. https://api.tryargus.xyz. Empty in local dev,
+// where next.config's rewrite proxies same-origin /api/* to the bridge on :8010.
+// Direct calls keep SSE unbuffered (proxying the stream through Vercel buffers it).
+export const API_BASE = process.env.NEXT_PUBLIC_ARGUS_API ?? "";
+
 async function getJSON<T>(path: string): Promise<T> {
-  const resp = await fetch(path, { headers: { Accept: "application/json" }, cache: "no-store" });
+  const resp = await fetch(`${API_BASE}${path}`, { headers: { Accept: "application/json" }, cache: "no-store" });
   if (!resp.ok) throw new Error(`${path} → ${resp.status}`);
   return (await resp.json()) as T;
 }
@@ -44,7 +50,7 @@ export const api = {
 };
 
 export async function postDecision(stream_id: string, action_id: string, approved: boolean) {
-  const resp = await fetch("/api/respond/decision", {
+  const resp = await fetch(`${API_BASE}/api/respond/decision`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stream_id, action_id, approved }),

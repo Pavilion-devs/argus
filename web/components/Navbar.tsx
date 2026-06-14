@@ -12,7 +12,7 @@ export default function Navbar() {
           <a className="text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="#features">Product</a>
           <a className="text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="#how-it-works">How it works</a>
           <a className="text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="#evaluation">Evaluation</a>
-          <a className="text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="/dashboard">Dashboard</a>
+          <a className="text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="/docs">Docs</a>
         </div>
         <div className="flex items-center gap-4">
           <a className="hidden sm:block text-sm font-medium text-zinc-400 hover:text-white transition-colors font-geist" href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>

@@ -1,0 +1,54 @@
+export const metadata = { title: "How Argus works" };
+
+<Eyebrow>Core concepts</Eyebrow>
+
+# How Argus works
+
+Argus investigates the way a good analyst does: it forms hypotheses, queries for
+evidence, reads what comes back, and decides the next move. There is no fixed query
+tree — the path is chosen at every step from real results.
+
+## The loop
+
+For each investigation Argus runs a **plan → act → observe → re-plan** loop:
+
+1. **Plan.** It takes the alert, recalls prior cases and the active blocklist, and declares the leading hypotheses it will test.
+2. **Act.** It writes SPL and runs it through the Splunk MCP Server (`splunk_run_query` and friends). This is the only way Argus reads Splunk.
+3. **Observe.** It reads the result rows, confirms or refutes each hypothesis, and enriches any external indicators with live threat intel.
+4. **Re-plan.** Based on what it learned, it chooses the next pivot — and loops until it is confident or hits `--max-turns`.
+
+A synthesizer then assembles the **grounded report**, with every timeline step linked
+to the `tool_use` query that evidences it.
+
+## The hypothesis ledger
+
+Argus maintains an explicit ledger of hypotheses and marks each **confirmed** or
+**refuted** as evidence arrives. This keeps the investigation honest: a verdict is the
+result of resolved hypotheses, not a vibe. Benign outcomes are first-class — if the
+evidence says benign, that is a successful investigation, not a failure to find
+something.
+
+## Deterministic enrichment
+
+The trustworthy parts of the report are computed by code, not the model, so they can't
+be hallucinated:
+
+- **MITRE ATT&CK** technique ids are validated against a pinned ATT&CK catalog and rendered as an ordered kill-chain.
+- The **risk score (0–100)** is a deterministic composite of verdict, confidence, severity, kill-chain breadth, threat-intel signal, and case-memory history.
+
+## Multi-agent mode
+
+With `--multi`, four specialist sub-agents — auth, network, endpoint, and intel —
+investigate their domains concurrently. A synthesizer correlates their findings into a
+single narrative. Use it for broad or noisy incidents where parallel coverage helps.
+
+```bash
+uv run argus investigate "Triage the spike in failed logins and outbound traffic" --multi
+```
+
+## Then it closes the loop
+
+Investigation is only half the job. With `--respond`, Argus contains the threat and,
+on a confirmed true positive, installs a detection so Splunk catches the recurrence.
+See [Grounding & evidence](/docs/grounding) for why every step stays auditable, and the
+[CLI reference](/docs/cli) for the response flags.
