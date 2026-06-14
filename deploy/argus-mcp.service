@@ -1,0 +1,20 @@
+[Unit]
+Description=Argus MCP server (streamable-http, read-only hosted demo endpoint)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/argus
+# Loads Splunk token + Bedrock creds; ARGUS_MCP_READONLY drops response execution.
+EnvironmentFile=-/opt/argus/.env
+Environment=ARGUS_MCP_READONLY=1
+# Bind loopback only — the bearer-auth Caddy gateway (:8011) is the sole way in.
+ExecStart=/opt/argus/.venv/bin/argus mcp --transport streamable-http --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

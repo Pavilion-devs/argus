@@ -301,6 +301,22 @@ evidence; reads like `argus_recall_memory` / `argus_list_cases` /
 `argus_run_detections` are safe to call freely; `argus_execute_response` stays
 gated behind the `EXECUTE_ARGUS_RESPONSE` confirmation string.
 
+### Hosted demo endpoint (for judges)
+
+A **read-only** Argus MCP server is hosted so you can try it with **zero setup** —
+no clone, no `uv`, no Splunk, no credentials. It runs against a live Splunk
+Enterprise + BOTS v3 and exposes only the read / investigate / proof tools;
+response execution is not registered at all.
+
+```bash
+claude mcp add argus-hosted --transport http https://mcp.tryargus.xyz/mcp \
+  --header "Authorization: Bearer <token-in-submission-notes>"
+```
+
+Then ask Claude to `use argus-hosted to investigate suspicious AWS activity in botsv3`.
+The bearer token is in the submission notes; the endpoint is token-gated and cannot
+run containment.
+
 ## Project layout
 
 ```

@@ -1,0 +1,20 @@
+# Bearer-auth gateway for the hosted Argus MCP demo endpoint.
+#
+#   TierHive HAProxy (mcp.tryargus.xyz, TLS)  ->  this :8011  ->  Argus MCP :8765
+#
+# `__MCP_TOKEN__` is substituted with a real secret by deploy time (kept out of
+# git). Any request whose Authorization header isn't exactly `Bearer <token>`
+# gets 401 before it ever reaches Argus. `flush_interval -1` keeps the
+# streamable-http stream unbuffered.
+
+:8011 {
+	@unauthorized not header Authorization "Bearer __MCP_TOKEN__"
+	respond @unauthorized "Unauthorized" 401
+
+	reverse_proxy 127.0.0.1:8765 {
+		# MCP streamable-http has DNS-rebinding protection and only trusts a
+		# localhost Host header — rewrite it (public Host is mcp.tryargus.xyz).
+		header_up Host 127.0.0.1:8765
+		flush_interval -1
+	}
+}

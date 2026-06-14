@@ -9,6 +9,7 @@ Splunk MCP Server. The composition is the point:
 from __future__ import annotations
 
 import json
+import os
 from typing import Any, Literal
 
 from mcp.server.fastmcp import FastMCP
@@ -19,6 +20,10 @@ from .connectors import ResponseEngine
 from .mcp_client import SplunkMCPClient
 
 Transport = Literal["stdio", "sse", "streamable-http"]
+
+# When set (e.g. on the public hosted demo endpoint), Argus exposes only read /
+# investigate / proof tools and never registers response execution.
+_READONLY = os.getenv("ARGUS_MCP_READONLY", "").strip().lower() in {"1", "true", "yes", "on"}
 
 INSTRUCTIONS = """
 Argus is an autonomous SOC investigation agent for Splunk.
@@ -99,7 +104,7 @@ def _parse_report(report_json: str | dict[str, Any]) -> dict[str, Any]:
 @mcp.tool()
 async def argus_health() -> dict[str, Any]:
     """Check Argus configuration and Splunk MCP Server reachability."""
-    info = {"ok": True, **_settings_status(), "splunk_mcp": "unknown"}
+    info = {"ok": True, "readonly": _READONLY, **_settings_status(), "splunk_mcp": "unknown"}
     if not info["splunk_token_configured"]:
         info["ok"] = False
         info["splunk_mcp"] = "missing_token"
@@ -244,7 +249,6 @@ async def argus_recall_memory(
     return {"ok": True, "recall": recall}
 
 
-@mcp.tool()
 async def argus_execute_response(
     report_json: str,
     confirmation: str,
@@ -271,6 +275,13 @@ async def argus_execute_response(
     finally:
         await client.aclose()
     return {"ok": True, "events": events}
+
+
+# Response execution writes to Splunk (KV store, detections, integrations), so it is
+# registered ONLY when not in read-only mode. The public hosted endpoint runs with
+# ARGUS_MCP_READONLY=1 and therefore never advertises this tool at all.
+if not _READONLY:
+    mcp.tool()(argus_execute_response)
 
 
 def run(transport: Transport = "stdio", host: str = "127.0.0.1", port: int = 8765) -> None:
