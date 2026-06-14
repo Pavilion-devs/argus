@@ -47,7 +47,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {...p}
       />
     ),
-    li: (p) => <li className="pl-1" {...p} />,
+    li: (p) => <li className="pl-1.5 [&>p]:my-0 [&>ul]:my-2 [&>ol]:my-2" {...p} />,
     strong: (p) => <strong className="font-semibold text-zinc-900 dark:text-white" {...p} />,
     hr: (p) => <hr className="my-10 border-zinc-200 dark:border-zinc-800" {...p} />,
     blockquote: (p) => (

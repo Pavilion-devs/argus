@@ -1,0 +1,49 @@
+export const metadata = { title: "Splunk MCP Server" };
+
+<Eyebrow>Integrations</Eyebrow>
+
+# Splunk MCP Server
+
+The Splunk MCP Server is Argus's **read path**. Every investigation query — without
+exception — runs through it over JSON-RPC. This is what keeps an investigation
+auditable, portable, and reusable: the whole analysis is a sequence of MCP tool calls
+against live Splunk.
+
+## Install and connect
+
+1. Install the **Splunk MCP Server** (Splunkbase app `7931`) on your Splunk instance. The endpoint lives on the management port, e.g. `https://<host>:8089/services/mcp`.
+2. Enable token auth in Splunk and mint a token.
+3. Point Argus at it with `SPLUNK_MCP_URL` and `SPLUNK_TOKEN`.
+
+```bash
+SPLUNK_MCP_URL=https://your-splunk:8089/services/mcp
+SPLUNK_TOKEN=<token minted with audience=mcp>
+SPLUNK_VERIFY_SSL=false   # only for a self-signed dev cert
+```
+
+<Callout type="warning" title="audience=mcp is required">
+The token must be minted with `audience=mcp`. Without it the connection succeeds but
+searches fail to authorize.
+</Callout>
+
+Verify connectivity:
+
+```bash
+uv run argus check
+```
+
+## How Argus uses it
+
+During an investigation the agent generates SPL and calls the MCP tools to run it,
+reads the result rows, and pivots — looping until confident. The same client also backs
+one-off queries:
+
+```bash
+uv run argus query "index=botsv3 sourcetype=aws:cloudtrail | stats count by src_ip"
+```
+
+## Read-only by design
+
+The MCP Server's safe-SPL allowlist is intentionally **read-only**. That is a feature:
+it guarantees the investigation path can never mutate Splunk. Containment writes take a
+separate, gated path — see [Splunk REST & KV-store](/docs/integrations/splunk-rest).

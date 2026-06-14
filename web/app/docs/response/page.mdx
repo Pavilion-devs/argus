@@ -1,0 +1,57 @@
+export const metadata = { title: "Response & containment" };
+
+<Eyebrow>Using Argus</Eyebrow>
+
+# Response & containment
+
+Investigation is read-only and MCP-native. **Response is a separate, explicitly gated
+write path.** Argus only acts after a verdict, only with approval, and only through
+Splunk's authenticated REST API.
+
+Add `--respond` to an investigation to run the response phase:
+
+```bash
+uv run argus investigate "AWS IAM abuse from web_admin" --respond
+```
+
+Each proposed action pauses for a `y/N` approval. Add `--auto` to execute without
+prompts (use it only against a lab instance).
+
+## What gets written
+
+| Action | Where | Notes |
+| --- | --- | --- |
+| **Blocklist** | `argus_threat_blocklist` KV collection | The offending IP / user / domain / hash, enforced by a correlation search. |
+| **Case** | `argus_cases` KV collection | The full investigation, recorded for institutional memory. |
+| **Detection** | `argus_response` app saved search | On a confirmed true positive only — a new scheduled, read-only SPL detection. |
+| **Notify** | Slack / Jira | Optional, if the connectors are configured. |
+
+## Detection-as-code
+
+After a confirmed true positive, Argus writes a **new scheduled correlation search** so
+Splunk catches the recurrence. Two safeguards keep this safe:
+
+- The detection SPL must be **read-only** — any command that could write, mutate, or execute is rejected before deploy.
+- The SPL is **dry-run through the MCP Server** before it is saved, so a broken detection never lands.
+
+Prove the deployed detections fire on demand:
+
+```bash
+uv run argus detections --run --earliest 0
+```
+
+<Callout type="note" title="Live-fire example">
+On BOTS v3, Argus records a case, deploys the detection
+"Argus - Auto: AWS IAM API abuse by web_admin source IP", and that detection produces a
+live match on `139.198.18.205` / `web_admin`.
+</Callout>
+
+## Why writes go through REST, not MCP
+
+Investigation stays 100% MCP-native and read-only by design — the Splunk MCP Server's
+safe-SPL allowlist is intentionally read-only. Containment writes (KV blocklist, cases,
+detection deployment) therefore use Splunk's authenticated REST API. This keeps the
+analysis path auditable and the action path explicit and gated.
+
+See [Splunk REST & KV-store](/docs/integrations/splunk-rest) for the write path and
+[Configuration](/docs/configuration) for the optional Slack/Jira connectors.

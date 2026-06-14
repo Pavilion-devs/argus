@@ -1,0 +1,40 @@
+export const metadata = { title: "Threat intel" };
+
+<Eyebrow>Integrations</Eyebrow>
+
+# Threat intel
+
+When an investigation surfaces an external indicator — an IP, domain, or hash — Argus
+enriches it with **live** threat intelligence and folds the result into the verdict and
+risk score. Enrichment is real network calls, not canned data.
+
+## Sources
+
+| Source | Used for |
+| --- | --- |
+| **ip-api** | IP geolocation and ASN context (no key required). |
+| **AbuseIPDB** | IP reputation and abuse confidence. |
+| **VirusTotal** | File hash and indicator reputation. |
+
+## Configure
+
+Enrichment is optional. Set the keys you have; Argus skips any source whose key is
+absent rather than failing.
+
+```bash
+ABUSEIPDB_API_KEY=<key>
+VT_API_KEY=<key>
+```
+
+See [Configuration](/docs/configuration) for the full variable list.
+
+## How it feeds the verdict
+
+Enrichment runs inside the investigation loop: when the agent finds an external
+indicator it enriches it, and the signal becomes part of the deterministic risk score
+alongside verdict, confidence, severity, kill-chain breadth, and case-memory history.
+
+<Callout type="note" title="Geo context, concretely">
+In the BOTS v3 AWS compromise, enrichment places attacker IP `139.198.18.205` in China,
+reinforcing the credential-abuse verdict.
+</Callout>

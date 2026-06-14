@@ -1,0 +1,48 @@
+export const metadata = { title: "Argus MCP server" };
+
+<Eyebrow>Integrations</Eyebrow>
+
+# Argus MCP server
+
+Argus reads Splunk through MCP — and it also *publishes* its own MCP server, so an
+existing SOC copilot or any MCP host can call the full investigation workflow as tools
+instead of integrating a bespoke API.
+
+## Run it
+
+```bash
+uv run argus mcp --transport stdio                    # for local MCP hosts
+uv run argus mcp --transport streamable-http --port 8765
+```
+
+## Tools
+
+| Tool | Description |
+| --- | --- |
+| `argus_investigate_alert` | Investigate an alert end to end and return a grounded report. `multi_agent` and `max_turns` are optional. |
+| `argus_recall_memory` | Recall prior cases and blocklist hits for indicators or keywords. |
+| `argus_list_cases` | List recorded cases from KV-store case memory. |
+| `argus_list_blocklist` | List active indicators in the threat blocklist. |
+| `argus_list_detections` | List detections Argus has deployed as saved searches. |
+| `argus_run_detections` | Run deployed detections on demand through MCP. |
+| `argus_execute_response` | Execute gated response actions for a completed report. |
+| `argus_health` | Connectivity / health check. |
+
+## Response is gated, even over MCP
+
+`argus_investigate_alert` is read-only. Response actions are deliberately a separate
+tool, `argus_execute_response`, and they require an explicit confirmation argument that
+must be **exactly** `EXECUTE_ARGUS_RESPONSE`. Anything else is refused.
+
+```json
+{
+  "report_json": "<the report from argus_investigate_alert>",
+  "confirmation": "EXECUTE_ARGUS_RESPONSE",
+  "case_id": "optional"
+}
+```
+
+<Callout type="note" title="Same guarantees, different caller">
+Whether Argus is driven by the CLI, the dashboard, or another copilot over MCP, the
+rules are identical: investigation is grounded and read-only, and every write is gated.
+</Callout>
