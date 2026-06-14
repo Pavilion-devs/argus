@@ -1,0 +1,43 @@
+export const metadata = { title: "Grounding & evidence" };
+
+<Eyebrow>Core concepts</Eyebrow>
+
+# Grounding & evidence
+
+Grounding is the product. An LLM pointed at an alert only helps if the verdict can be
+trusted, and a verdict you can't audit isn't trustworthy enough to act on. So Argus
+holds itself to a single rule.
+
+<Callout type="note" title="The rule">
+Every material claim is grounded in real Splunk evidence, linked back to the exact SPL
+it ran and the events it used.
+</Callout>
+
+## How grounding works
+
+Argus keeps a grounding store that maps each claim to the evidence behind it:
+
+- Every reported step in the **attack timeline** links to the `tool_use` query that produced it.
+- Every **IOC** in the report is verified to actually exist in the data, not just asserted.
+- The analysis path is **read-only and MCP-native**, so the whole investigation is auditable, portable, and reusable.
+
+Because the trustworthy fields are computed deterministically (see
+[How Argus works](/docs/how-it-works)), the verdict, ATT&CK mapping, and risk score
+can't be fabricated by the model.
+
+## Why benign is a real answer
+
+A failing benchmark once turned out to be wrong, not the agent: a "malicious"
+ground-truth IP was actually Splunk's own benign data-collection account. We fixed the
+metric rather than push the agent toward a false positive — and made benign verdicts a
+first-class successful outcome. A system that over-calls to look busy is worse than
+useless in a SOC.
+
+## What grounding buys you
+
+- **Auditability.** Reviewers can click from any claim to the SPL and rows that prove it.
+- **Trust under response.** Because the verdict is evidence-backed, gated containment is safe to act on.
+- **Reusability.** The same grounded workflow is exposed as an [MCP server](/docs/cli#argus-mcp) so other copilots can call it.
+
+The eval harness measures this directly: verdict accuracy, indicator recall, grounding
+precision (every reported IOC verified present in the data), and ATT&CK validity.

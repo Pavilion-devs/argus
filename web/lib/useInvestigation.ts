@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useReducer, useRef } from "react";
-import { postDecision } from "./api";
+import { API_BASE, postDecision } from "./api";
 import { streamSSE, type StreamHandle } from "./sse";
 import type {
   AgentName,
@@ -186,7 +186,7 @@ export function useInvestigation() {
       toolIndex.current = {};
       force();
       handle.current = streamSSE(
-        "/api/investigate",
+        `${API_BASE}/api/investigate`,
         { alert, multi: !!opts.multi, max_turns: opts.maxTurns ?? 12 },
         apply,
         (err) => {
@@ -275,7 +275,7 @@ export function useInvestigation() {
       ref.current.response = { status: "running", actions: [] };
       force();
       respHandle.current = streamSSE(
-        "/api/respond",
+        `${API_BASE}/api/respond`,
         { report, mode },
         applyResponse,
         () => {

@@ -1,0 +1,49 @@
+export const metadata = { title: "Overview" };
+
+<Eyebrow>Getting started</Eyebrow>
+
+# Overview
+
+Argus is an autonomous SOC analyst for Splunk. Given an alert or a natural-language
+request, it investigates end to end: it writes its own SPL, runs it through the
+**Splunk MCP Server**, pivots across real data, validates MITRE ATT&CK, reaches a
+verdict, and contains the threat.
+
+It is built around one rule: **every material claim is grounded in real Splunk
+evidence**, linked back to the exact SPL it ran and the events it used.
+
+<Callout type="note" title="The one rule">
+"True positive, severity high" is worthless without the events behind it. Every
+conclusion Argus reaches links to the exact query and the exact rows that prove it.
+</Callout>
+
+## What Argus does
+
+Given an alert, Argus:
+
+1. **Recalls** prior cases and the active blocklist so repeat offenders surface immediately.
+2. **Investigates** autonomously in a plan → act → observe → re-plan loop. It writes SPL, runs it through the Splunk MCP Server, reads the results, and chooses the next pivot. No scripted paths.
+3. **Tracks hypotheses** explicitly, marking each confirmed or refuted as evidence arrives.
+4. **Produces a grounded report**: verdict, severity, confidence, attack timeline, IOCs, validated MITRE ATT&CK, kill-chain, and an explainable 0–100 risk score.
+5. **Executes response** behind approval gates: a Splunk KV-store blocklist enforced by a correlation search, optional tickets, and a recorded case.
+6. **Self-hardens** after a true positive by writing and installing a read-only SPL detection so the SOC catches the recurrence.
+
+## Why it's different
+
+- It writes its **own SPL** through the Splunk MCP Server instead of following a fixed query tree.
+- Every claim is **auditable**, linked to the exact SPL and events rather than a free-form summary.
+- It is reusable as **infrastructure**: a Splunk custom alert action on one side, an analyst-grade MCP server on the other.
+- It doesn't stop at triage. It **contains** the threat and installs the detection that catches the next one.
+
+## A concrete run
+
+On the BOTS v3 dataset, Argus autonomously finds the Frothly AWS compromise (a leaked
+access key, a hijacked `web_admin` user, attacker IP `139.198.18.205`), contains it,
+and writes a detection that fires on the same pattern.
+
+## Where to next
+
+- [Quickstart](/docs/quickstart) — run a grounded investigation in a few minutes.
+- [How Argus works](/docs/how-it-works) — the investigation loop in depth.
+- [Grounding & evidence](/docs/grounding) — why every claim is auditable.
+- [Architecture](/docs/architecture) — the whole system in one diagram.

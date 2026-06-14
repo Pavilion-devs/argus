@@ -34,6 +34,7 @@ web/coverage/
 
 # Splunk data & apps (large / licensed downloads — not committed)
 splunk/apps/*.tgz
+deploy/vendor/*.tgz
 splunk/apps/*.spl
 splunk/apps/botsv3/
 splunk/apps/splunk-mcp-server/

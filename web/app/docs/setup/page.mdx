@@ -1,0 +1,79 @@
+export const metadata = { title: "Installation & setup" };
+
+<Eyebrow>Getting started</Eyebrow>
+
+# Installation & setup
+
+## Prerequisites
+
+- **Python 3.11+** and [uv](https://github.com/astral-sh/uv)
+- A **model provider**: AWS Bedrock (Claude Sonnet 4.6) or the Anthropic API
+- A reachable **Splunk MCP Server** (Splunkbase app 7931) on your Splunk instance
+- Splunk token auth enabled, for both the MCP read path and the gated response path
+
+## Install
+
+```bash
+git clone https://github.com/Pavilion-devs/argus
+cd argus
+uv sync
+```
+
+Then create your env file:
+
+```bash
+cp .env.example .env
+```
+
+## Model provider
+
+Argus runs a custom Claude tool-use loop. Choose your provider with `ARGUS_PROVIDER`:
+
+- `anthropic` — uses `ANTHROPIC_API_KEY` directly.
+- `bedrock` — uses AWS Bedrock with a Bedrock API key and region.
+
+<Callout type="note" title="Bedrock uses a bearer token">
+The Bedrock path authenticates with a bearer token (`AWS_BEARER_TOKEN_BEDROCK`) plus
+`AWS_REGION`, not SigV4 access keys. Set `ARGUS_MODEL` to the Claude Sonnet 4.6
+inference-profile id for your region.
+</Callout>
+
+## Splunk MCP Server (read path)
+
+All investigation reads go through the Splunk MCP Server over JSON-RPC. Argus never
+touches Splunk for analysis any other way.
+
+1. Install the **Splunk MCP Server** (Splunkbase app `7931`) on your Splunk instance. The endpoint lives on the management port, e.g. `https://<host>:8089/services/mcp`.
+2. Enable token auth and create a token in **Settings → Tokens**.
+3. Point `SPLUNK_MCP_URL` and `SPLUNK_TOKEN` at it. For a self-signed dev cert, set `SPLUNK_VERIFY_SSL=false`.
+
+<Callout type="warning" title="Mint the token with audience=mcp">
+MCP calls only authorize when the token is minted with `audience=mcp`. A token created
+without it will connect but fail to run searches.
+</Callout>
+
+## Splunk REST (write path)
+
+Containment writes — the KV-store blocklist, recorded cases, and detection
+deployment — use Splunk's authenticated REST API. This keeps the analysis path
+read-only and MCP-native while every action stays explicit and gated. The same
+`SPLUNK_TOKEN` is reused for these writes.
+
+## Optional integrations
+
+| Capability | Variables |
+| --- | --- |
+| Threat intel | `VT_API_KEY`, `ABUSEIPDB_API_KEY` |
+| Response connectors | `SLACK_WEBHOOK_URL`, `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` |
+| Alert-action auth | `ARGUS_ALERT_TOKEN` |
+
+See [Configuration](/docs/configuration) for the full list.
+
+## Verify the connection
+
+```bash
+uv run argus check
+```
+
+This confirms Argus can reach the Splunk MCP Server. Once it passes, continue to the
+[Quickstart](/docs/quickstart).

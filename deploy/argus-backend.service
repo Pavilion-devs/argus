@@ -1,0 +1,19 @@
+[Unit]
+Description=Argus SOC backend (FastAPI/SSE bridge over the investigation engine)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/argus
+# pydantic-settings also reads /opt/argus/.env directly; this is belt-and-suspenders.
+EnvironmentFile=-/opt/argus/.env
+ExecStart=/opt/argus/.venv/bin/argus serve --host 127.0.0.1 --port 8010
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

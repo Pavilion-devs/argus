@@ -49,6 +49,14 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+async def root() -> dict[str, str]:
+    """Liveness banner at the root path. Also serves as the upstream load
+    balancer's health-check target — some LBs probe `/` and expect a 2xx, not
+    `/api/health` — so keep this a cheap, dependency-free 200."""
+    return {"service": "argus", "status": "ok", "health": "/api/health"}
+
+
 def _client() -> SplunkMCPClient:
     s = get_settings()
     return SplunkMCPClient(

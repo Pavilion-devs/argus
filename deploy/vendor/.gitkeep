@@ -1,0 +1,3 @@
+# Drop the Splunkbase MCP app here before deploying:
+#   splunk-mcp-server_120.tgz
+# It is licensed/large and is NOT committed (see .gitignore). push.sh scp's it up.
