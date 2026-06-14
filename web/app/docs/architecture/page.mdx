@@ -1,0 +1,33 @@
+import ArchitectureDiagram from "@/components/ArchitectureDiagram";
+
+export const metadata = { title: "Architecture" };
+
+<Eyebrow>Resources</Eyebrow>
+
+# Architecture
+
+The whole system in one view: who triggers Argus, the MCP-native investigation loop in
+the middle, the Splunk and enrichment systems it reads, and the gated response and
+detection-as-code it writes back.
+
+<div className="my-8">
+  <ArchitectureDiagram framed />
+</div>
+
+[Open the full-screen view →](/architecture)
+
+## The three paths
+
+- **Investigation (read).** Argus reads Splunk only through the Splunk MCP Server over JSON-RPC. The agent writes SPL, runs it, reads the rows, and pivots — 100% MCP-native and read-only.
+- **Enrichment.** External indicators are enriched with live threat intel (AbuseIPDB, VirusTotal, ip-api) and validated against the pinned MITRE ATT&CK catalog.
+- **Response (write).** Containment goes through Splunk's authenticated REST API: a KV-store blocklist enforced by a correlation search, recorded cases, and, on a confirmed true positive, a newly installed scheduled detection.
+
+## Reusable as infrastructure
+
+Argus is not just a CLI. The same workflow is exposed two ways:
+
+- A **Splunk custom alert action** can trigger an investigation from any saved search (authenticated with `ARGUS_ALERT_TOKEN`).
+- An **Argus MCP server** (`uv run argus mcp`) lets other SOC copilots call the full investigation as tools.
+
+See [How Argus works](/docs/how-it-works) for the investigation loop, and the
+[CLI reference](/docs/cli) for the commands behind each path.

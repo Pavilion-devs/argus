@@ -1,0 +1,65 @@
+export const metadata = { title: "Configuration" };
+
+<Eyebrow>Reference</Eyebrow>
+
+# Configuration
+
+Argus reads configuration from environment variables (a `.env` file in the project
+root works). Copy `.env.example` and fill it in.
+
+```bash
+cp .env.example .env
+```
+
+## Model provider
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `ARGUS_PROVIDER` | yes | `anthropic` (direct API) or `bedrock` (AWS Bedrock). |
+| `ARGUS_MODEL` | yes | Model id. For Bedrock, the Claude Sonnet 4.6 inference-profile id. |
+| `ANTHROPIC_API_KEY` | for `anthropic` | Anthropic API key. |
+| `AWS_BEARER_TOKEN_BEDROCK` | for `bedrock` | Bedrock API key (bearer token). |
+| `AWS_REGION` | for `bedrock` | AWS region with Anthropic model access. |
+
+<Callout type="note" title="Bedrock auth">
+The Bedrock path uses a bearer token, not SigV4 access keys. Pair
+`AWS_BEARER_TOKEN_BEDROCK` with `AWS_REGION`.
+</Callout>
+
+## Splunk
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `SPLUNK_MCP_URL` | yes | Splunk MCP endpoint, e.g. `https://<host>:8089/services/mcp`. |
+| `SPLUNK_TOKEN` | yes | Splunk bearer token. Mint it with `audience=mcp`. Reused for gated REST writes. |
+| `SPLUNK_VERIFY_SSL` | no | `false` to skip TLS verification for a self-signed dev cert. |
+| `SPLUNK_PASSWORD` | dev | Admin password for the local Splunk docker setup. |
+
+## Threat intel (optional)
+
+| Variable | Description |
+| --- | --- |
+| `VT_API_KEY` | VirusTotal API key for indicator enrichment. |
+| `ABUSEIPDB_API_KEY` | AbuseIPDB API key for IP reputation. |
+
+If unset, Argus still runs; it simply skips that enrichment source.
+
+## Response connectors (optional)
+
+| Variable | Description |
+| --- | --- |
+| `SLACK_WEBHOOK_URL` | Post case notifications to Slack. |
+| `JIRA_BASE_URL` | Jira instance base URL. |
+| `JIRA_EMAIL` | Jira account email. |
+| `JIRA_API_TOKEN` | Jira API token. |
+
+## Alert action (optional)
+
+| Variable | Description |
+| --- | --- |
+| `ARGUS_ALERT_TOKEN` | Shared secret a Splunk custom alert action must send to `argus serve` to trigger an investigation. |
+
+<Callout type="warning" title="Never commit .env">
+`.env` holds live credentials. Keep it out of version control — only `.env.example`
+(with empty values) belongs in the repo.
+</Callout>

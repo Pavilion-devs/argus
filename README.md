@@ -12,6 +12,15 @@ Built for the **Splunk Agentic Ops Hackathon** — Security track.
 
 ---
 
+## Live
+
+- 🎥 **Demo video** — https://youtu.be/1id6YQgY73s
+- 🌐 **Live app** — https://www.tryargus.xyz
+- 📖 **Docs** — https://www.tryargus.xyz/docs
+- 🗺️ **Architecture** — https://www.tryargus.xyz/architecture
+
+---
+
 ## Quick Path
 
 If you want the shortest path through the project:
@@ -126,20 +135,20 @@ contain the threat.
 
 ## Architecture
 
-See [`architecture_diagram.md`](architecture_diagram.md). In short: a CLI/agent →
-a Claude-powered (single- or multi-agent) orchestrator → the **Splunk MCP Server**
-(the only way it reads Splunk) → Splunk Enterprise with the BOTS v3 dataset. Real
-containment is written to KV-store collections (via the authenticated REST API) in
-the companion `argus_response` app and enforced by a correlation search.
+![Argus architecture](web/public/media/argus-architecture-diagram-clean.png)
 
-## What To Demo
+In short: a CLI/agent → a Claude-powered (single- or multi-agent) orchestrator →
+the **Splunk MCP Server** (the only way it reads Splunk) → Splunk Enterprise with
+the BOTS v3 dataset. Real containment is written to KV-store collections (via the
+authenticated REST API) in the companion `argus_response` app and enforced by a
+correlation search.
 
-The strongest demo path right now is:
+**Explore it live:**
 
-1. Fire the packaged Splunk alert action into `argus serve`.
-2. Show the resulting case in the dashboard's **SOC proof** / **Memory & hardening** views.
-3. Show the grounded report and evidence drill-down.
-4. Run `uv run argus detections --run --earliest 0` or the dashboard **SOC proof** tab to prove the Argus-authored detection fires on live BOTS data.
+- 🌐 Live app — https://www.tryargus.xyz
+- 🗺️ Interactive architecture — https://www.tryargus.xyz/architecture
+- 📖 Docs — https://www.tryargus.xyz/docs
+- 🎥 Demo video — https://youtu.be/1id6YQgY73s
 
 ## Requirements
 
@@ -251,6 +260,46 @@ Available Argus MCP tools:
 - `argus_execute_response` — executes response actions from a completed report.
   This tool requires the exact confirmation string `EXECUTE_ARGUS_RESPONSE`
   because it can write to Splunk KV store and deploy detections.
+
+### Use Argus from Claude Code (or any MCP host)
+
+Argus speaks MCP over **stdio**, so you can run autonomous SOC investigations
+without leaving Claude Code, Claude Desktop, Cursor, or any MCP host — it brings
+the whole Splunk investigation loop into your existing workflow.
+
+**Claude Code** — add it once (point `--directory` at your Argus checkout so it
+loads `.env` with your Splunk token + provider creds):
+
+```bash
+claude mcp add argus -- uv run --directory /path/to/argus argus mcp
+```
+
+Then just ask, in plain language:
+
+```text
+> use argus to investigate suspicious AWS activity in botsv3
+> ask argus to recall what it knows about 45.131.66.13
+> have argus run its deployed detections over the last 24h
+```
+
+**Claude Desktop / Cursor / other hosts** — add Argus to the MCP servers config:
+
+```json
+{
+  "mcpServers": {
+    "argus": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/argus", "argus", "mcp"]
+    }
+  }
+}
+```
+
+The host now has Argus's tools (above): `argus_investigate_alert` runs a full
+grounded investigation through the Splunk MCP Server and returns the report +
+evidence; reads like `argus_recall_memory` / `argus_list_cases` /
+`argus_run_detections` are safe to call freely; `argus_execute_response` stays
+gated behind the `EXECUTE_ARGUS_RESPONSE` confirmation string.
 
 ## Project layout
 

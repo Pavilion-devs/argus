@@ -1,0 +1,78 @@
+export const metadata = { title: "Quickstart" };
+
+<Eyebrow>Getting started</Eyebrow>
+
+# Quickstart
+
+Run your first grounded investigation. This assumes you've finished
+[Installation & setup](/docs/setup): Python and uv, a model provider key, and a
+reachable Splunk MCP Server.
+
+## 1. Clone and install
+
+```bash
+git clone https://github.com/Pavilion-devs/argus
+cd argus
+uv sync
+```
+
+## 2. Configure your environment
+
+Copy the example env and fill in your model provider and Splunk MCP details:
+
+```bash
+cp .env.example .env
+```
+
+Every variable is documented in [Configuration](/docs/configuration).
+
+## 3. Run an investigation
+
+```bash
+uv run argus investigate "Investigate the AWS IAM activity from web_admin"
+```
+
+Argus recalls prior cases, writes SPL, runs it through the MCP Server, and pivots
+until it is confident — streaming each tool call, result, and hypothesis to your
+terminal. It finishes with a grounded report: verdict, severity, an attack
+timeline, IOCs, validated MITRE ATT&CK, and a 0–100 risk score.
+
+<Callout type="tip" title="Watch it stream in a UI">
+Prefer a dashboard? Start the streaming bridge with `uv run argus serve` and open the
+web app — the reasoning, SPL, and evidence stream live. See the
+[CLI reference](/docs/cli).
+</Callout>
+
+## 4. Contain and harden (optional)
+
+Add `--respond` to run the gated response phase — a Splunk KV-store blocklist, a
+recorded case, and, on a confirmed true positive, a freshly installed detection:
+
+```bash
+uv run argus investigate "Investigate the AWS IAM activity from web_admin" --respond
+```
+
+Each action pauses for an explicit approval. Nothing is written to Splunk without
+your confirmation. To run unattended, add `--auto`.
+
+<Callout type="warning" title="Response writes are real">
+`--respond` performs real writes through Splunk's REST API (blocklist entries, cases,
+scheduled detections). Use it against a lab instance like BOTS v3 first.
+</Callout>
+
+## 5. Prove the detection fires
+
+After a true positive, Argus deploys a scheduled detection. Run the deployed
+detections on demand to prove they match:
+
+```bash
+uv run argus detections --run --earliest 0
+```
+
+## What you just saw
+
+On BOTS v3, Argus autonomously surfaces the Frothly AWS compromise (a leaked key, a
+hijacked `web_admin`, attacker IP `139.198.18.205`), contains it, and installs the
+detection that catches the recurrence — every step linked to the SPL that proves it.
+
+Next: [How Argus works](/docs/how-it-works).

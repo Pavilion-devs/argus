@@ -1,0 +1,17 @@
+# Argus API — TLS + SSE-friendly reverse proxy to the FastAPI backend.
+#
+# `__API_DOMAIN__` is substituted by deploy/provision.sh (default api.tryargus.xyz).
+# `flush_interval -1` disables response buffering so Server-Sent Events stream to
+# the browser incrementally instead of arriving all at once when the stream ends.
+# Caddy auto-provisions a Let's Encrypt cert for this host once DNS points here.
+
+__API_DOMAIN__ {
+	reverse_proxy 127.0.0.1:8010 {
+		flush_interval -1
+	}
+
+	# Long-lived investigations: don't let an idle SSE connection be capped early.
+	header {
+		-Server
+	}
+}
