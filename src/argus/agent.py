@@ -293,6 +293,22 @@ RESPONSE_TOOLS = [
     },
 ]
 
+
+def _response_tools(settings: Settings) -> list[dict[str, Any]]:
+    """Offer only the response actions usable in THIS deployment.
+
+    Unconfigured integrations (Slack/Jira) are dropped so the agent can't propose
+    an action the operator would approve only to watch it skip. block_indicator and
+    deploy_detection are always available; finish_response always closes the loop.
+    """
+    enabled = {"block_indicator", "deploy_detection", "finish_response"}
+    if settings.slack_webhook_url:
+        enabled.add("notify_slack")
+    if settings.jira_base_url and settings.jira_email and settings.jira_api_token:
+        enabled.add("create_ticket")
+    return [t for t in RESPONSE_TOOLS if t["name"] in enabled]
+
+
 MAX_TURNS = 12
 PER_TURN_MAX_TOKENS = 16000
 TOOL_RESULT_CHAR_CAP = 4000
@@ -641,7 +657,7 @@ class Investigator:
                     model=self.model,
                     max_tokens=4000,
                     system=RESPONSE_SYSTEM,
-                    tools=RESPONSE_TOOLS,
+                    tools=_response_tools(self.settings),
                     messages=messages,
                 )
                 messages.append({"role": "assistant", "content": resp.content})

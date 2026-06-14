@@ -6,152 +6,75 @@ Argus — Autonomous SOC Analyst
 
 ## Tagline
 
-The autonomous SOC analyst for Splunk: it writes its own SPL via the MCP
-Server, maps MITRE ATT&CK, and contains threats, with every verdict grounded in
-real events.
+The autonomous SOC analyst for Splunk: it writes its own SPL via the MCP Server, maps MITRE ATT&CK, and contains threats, with every verdict grounded in real events.
 
 ## Overview
 
-A Tier-1 SOC analyst spends 30-60 minutes manually pivoting across Splunk to
-triage a single notable event, and there are usually many more waiting in the
-queue. The obvious idea is to point an LLM at the alert, but in security that
-only matters if the model can be trusted. "True positive, severity high" is
-not useful if nobody can see the exact evidence behind it.
+A Tier-1 analyst spends 30–60 minutes triaging a single Splunk alert, and the queue never ends. Pointing an LLM at it only helps if the verdict can be trusted, and "true positive, severity high" is worthless without the evidence behind it.
 
-Argus is built around that constraint. It is an autonomous SOC analyst for
-Splunk with one hard rule: every material claim must be grounded in real
-Splunk evidence. Every conclusion links back to the SPL Argus wrote and the
-events it used. The other half of the design is MCP discipline: Argus reads
-Splunk only through the Splunk MCP Server, never through a hidden side path.
-That makes the investigation flow auditable, portable, and reusable.
+Argus is built around that constraint. It is an autonomous SOC analyst for Splunk with one rule: every material claim is grounded in real Splunk evidence, linked back to the exact SPL it ran and the events it used. It reads Splunk only through the Splunk MCP Server, which keeps the whole investigation auditable, portable, and reusable.
 
 ## What Argus Does
 
-Given an alert or a natural-language investigation request, Argus:
+Given an alert or a natural-language request, Argus:
 
-1. Recalls prior cases and the active blocklist so repeat offenders surface
-   immediately.
-2. Investigates autonomously with a real plan -> act -> observe -> re-plan
-   loop. Claude writes SPL, runs it through the Splunk MCP Server, inspects the
-   results, and chooses the next pivot.
-3. Tracks explicit hypotheses and marks them confirmed or refuted as evidence
-   arrives, so the reasoning stays inspectable.
-4. Produces a grounded incident report with verdict, severity, confidence,
-   attack timeline, IOCs, validated MITRE ATT&CK mapping, kill-chain, and an
-   explainable 0-100 risk score.
-5. Executes response actions behind approval gates by writing to a Splunk
-   KV-store blocklist, opening workflow tickets if configured, and recording
-   the case for later memory recall.
-6. Self-hardens after a true positive by writing and installing a read-only SPL
-   detection as a real scheduled search so the SOC can catch the recurrence.
+1. Recalls prior cases and the active blocklist so repeat offenders surface immediately.
+2. Investigates autonomously with a real plan → act → observe → re-plan loop. It writes SPL, runs it through the Splunk MCP Server, reads the results, and chooses the next pivot. No scripted paths.
+3. Tracks explicit hypotheses, marking each confirmed or refuted as evidence arrives.
+4. Produces a grounded report: verdict, severity, confidence, attack timeline, IOCs, validated MITRE ATT&CK, kill-chain, and an explainable 0–100 risk score.
+5. Executes response behind approval gates: a Splunk KV-store blocklist enforced by a correlation search, optional tickets, and a recorded case.
+6. Self-hardens after a true positive by writing and installing a read-only SPL detection so the SOC catches the recurrence.
 
-On the BOTS v3 dataset, Argus autonomously finds the Frothly AWS compromise,
-including the leaked access key `AKIAIGKL572SFDPOKLHA`, the compromised
-`web_admin` identity, and attacker IP `139.198.18.205`, then contains it and
-authors a detection that fires on the same attack pattern.
+On BOTS v3 it autonomously finds the Frothly AWS compromise (leaked key, hijacked `web_admin`, attacker IP `139.198.18.205`), contains it, and writes a detection that fires on the same pattern.
 
 ## How We Built It
 
-Argus is a Python async orchestrator with a custom Claude tool-use loop. We did
-not use a managed-agent abstraction because the system needs tight control over
-Splunk MCP tool access, evidence grounding, case memory, and write approval
-gates.
+A Python async orchestrator runs a custom Claude tool-use loop (Claude Sonnet 4.6 on AWS Bedrock). All investigation reads go through the Splunk MCP Server (Splunkbase 7931) over JSON-RPC, running real SPL against live Splunk every run — nothing is mocked. Response writes use Splunk's authenticated REST API, so the analysis path stays read-only and MCP-native while actions stay explicit and gated. Deterministic post-processing validates MITRE technique ids against a pinned ATT&CK catalog and computes the risk score, so the trustworthy parts can't be hallucinated.
 
-All investigation reads go through the Splunk MCP Server over JSON-RPC. Response
-writes use Splunk's authenticated REST API to update KV-store collections and
-scheduled searches. That separation is deliberate: the analysis path stays
-read-only and MCP-native, while response actions remain explicit and gated.
-
-Deterministic post-processing validates the parts that should never be
-hallucinated. MITRE ATT&CK technique ids are checked against a pinned ATT&CK
-Enterprise catalog committed to the repo, and the risk score is computed from
-observable factors including verdict, confidence, severity, kill-chain breadth,
-threat intelligence, and case-memory recidivism.
-
-Argus also ships in reusable forms:
-
-- A CLI for investigation, response, and evaluation.
-- A streaming web dashboard for live investigation review.
-- An Argus MCP server (`argus mcp`) so other SOC copilots can call
-  high-level investigation tools directly.
-- A packaged Splunk custom alert action so a saved search can trigger Argus as
-  part of an existing analyst workflow.
+Argus also ships as reusable infrastructure: a CLI, a streaming web dashboard, an Argus MCP server so other copilots can call it, and a Splunk custom alert action so a saved search can trigger it.
 
 ## Why This Stands Out
 
-Argus is not a chat UI over logs. The important differentiators are:
-
-- It writes its own SPL through the Splunk MCP Server instead of following a
-  fixed query tree.
-- It makes grounded, auditable claims instead of free-form security summaries.
-- It is reusable as infrastructure: a Splunk alert action on one side and an
-  analyst-grade MCP server on the other.
-- It does not stop at triage. It can contain the threat and install the
-  detection that catches the next occurrence.
+- It writes its own SPL through the Splunk MCP Server instead of following a fixed query tree.
+- Every claim is auditable, linked to the exact SPL and events rather than a free-form summary.
+- It is reusable as infrastructure: a Splunk alert action on one side, an analyst-grade MCP server on the other.
+- It doesn't stop at triage. It contains the threat and installs the detection that catches the next one.
 
 ## Live Proof Completed
 
-The repo and local validation now cover the full story:
-
 - Splunk custom alert action package: `splunk/argus_response/`
-- Argus webhook endpoints for Splunk alerts: `POST /api/splunk/alert`,
-  `GET /api/splunk/alert/{job_id}`, `GET /api/splunk/alerts`
-- Argus MCP server for external hosts: `uv run argus mcp`
-- Detection dry-run before deployment and on-demand detection execution:
-  `uv run argus detections --run --earliest 0`
-- Dashboard SOC proof tab for alert jobs and detection proof
-- Evaluation harness over 6 curated BOTS v3 scenarios
-
-Live-fire validation against a local Splunk instance produced:
-
-- Case: `ARGUS-SPLUNK-8CECF595`
-- Detection: `Argus - Auto: AWS IAM API abuse by web_admin source IP`
-- Detection proof: 1 live match on BOTS data for `139.198.18.205` /
-  `web_admin`
+- Webhook endpoints for Splunk alerts: `POST /api/splunk/alert` (plus status and list)
+- Argus MCP server for external hosts: `uv run argus mcp` (verified callable from Claude Code)
+- Detection dry-run before deploy and on-demand execution: `uv run argus detections --run --earliest 0`
+- Dashboard "SOC proof" tab for alert jobs and detection firing
+- Evaluation over 6 curated BOTS v3 scenarios: verdict accuracy 1.0, grounding ~0.99, 0 invalid ATT&CK ids (18 runs)
+- Live-fire: a recorded case, the deployed detection "Argus - Auto: AWS IAM API abuse by web_admin source IP", and 1 live match on `139.198.18.205` / `web_admin`
 
 ## Challenges We Faced
 
-One of the biggest debugging wins was discovering that a failing benchmark was
-wrong, not the agent. Our AWS scenario recall was stuck at 0.5 because a
-ground-truth indicator had been mislabeled as malicious when it was actually
-Splunk's own benign AWS collection account. Fixing the metric instead of
-forcing the agent toward a false positive became a core project principle.
+A failing benchmark turned out to be wrong, not the agent: a "malicious" ground-truth IP was actually Splunk's own benign data-collection account. We fixed the metric instead of forcing the agent toward a false positive, and made that a core principle.
 
-Another hard problem was extracting decisive evidence from raw XML-heavy Sysmon
-data in BOTS v3. We had to teach the agent better extraction tradecraft and add
-confidence-gated continuation so it could finish the pivot when the first pass
-was close but not decisive.
+Pulling decisive evidence from raw XML-heavy Sysmon data in BOTS v3 took better extraction tradecraft plus a confidence-gated continuation, so the agent finishes a close-but-not-decisive pivot.
 
-We also had to handle real integration friction: MCP tokens only work when they
-are minted with `audience=mcp`, and the web stream path required exact SSE
-framing plus disabled Next.js compression before events would render reliably.
+Real integration friction: MCP tokens only work when minted with `audience=mcp`, and the web stream needed exact SSE framing plus disabled Next.js compression before events would render.
 
 ## What We Learned
 
-- Grounding is the product in security AI. Without evidence links, the output
-  is not trustworthy enough to use.
+- Grounding is the product. Without evidence links, security AI isn't trustworthy enough to use.
 - A failing metric can indicate a data problem, not an agent problem.
-- Benign verdicts need to be treated as first-class successful outcomes or the
-  system becomes biased toward over-calling.
-- Strong constraints improve trust. Keeping investigation MCP-native and
-  read-only while gating writes makes the autonomy safer and easier to defend.
-
-Measured over an 18-run multi-sample evaluation, Argus reached verdict accuracy
-1.0, grounding precision about 0.99, and 0 hallucinated MITRE ATT&CK technique
-ids on the curated benchmark.
+- Benign verdicts must be first-class successful outcomes, or the system over-calls.
+- Strong constraints buy trust: keep investigation MCP-native and read-only, and gate every write.
 
 ## What's Next
 
 - Move from exact-match case recall to semantic recall.
-- Expand the detection replay story for even cleaner demo evidence.
+- Broaden the detection-replay evidence.
 - Calibrate risk-score weights against labeled incident-priority data.
 
 ## Built With
 
-`python`, `typescript`, `anthropic-claude`, `claude-sonnet-4.6`,
-`model-context-protocol`, `splunk`, `splunk-mcp-server`, `spl`, `aws-bedrock`,
-`boto3`, `fastapi`, `server-sent-events`, `sse-starlette`, `uvicorn`,
-`pydantic`, `typer`, `next.js`, `react`, `tailwindcss`, `mitre-att&ck`,
-`botsv3`, `splunk-kv-store`, `splunk-rest-api`, `json-rpc`, `ip-api`,
-`abuseipdb`, `virustotal`, `slack-webhook`, `jira-rest-api`, `uv`, `ruff`,
-`pytest`
+`python`, `splunk-mcp-server`, `spl`, `botsv3`, `model-context-protocol`, `claude-sonnet-4.6`, `aws-bedrock`, `mitre-att&ck`, `fastapi`, `next.js`, `splunk-kv-store`, `splunk-rest-api`
+
+---
+
+Repo: https://github.com/Pavilion-devs/argus (public · MIT) · Architecture: [architecture_diagram.md](architecture_diagram.md) · Demo video: `<add your YouTube link>`
