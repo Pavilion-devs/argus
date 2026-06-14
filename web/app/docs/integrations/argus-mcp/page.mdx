@@ -15,6 +15,26 @@ uv run argus mcp --transport stdio                    # for local MCP hosts
 uv run argus mcp --transport streamable-http --port 8765
 ```
 
+## Hosted demo endpoint
+
+A **read-only** Argus MCP server is hosted at `https://mcp.tryargus.xyz/mcp` so you can
+try the full investigation workflow with **zero setup** — no clone, no `uv`, no Splunk,
+no credentials. It runs against a live Splunk Enterprise + BOTS v3 and is gated by a
+bearer token.
+
+```bash
+claude mcp add argus-hosted --transport http https://mcp.tryargus.xyz/mcp \
+  --header "Authorization: Bearer <token>"
+```
+
+Then ask your host to `use argus-hosted to investigate suspicious AWS activity in botsv3`.
+
+<Callout type="note" title="Read-only by design">
+The hosted endpoint registers only the read / investigate / proof tools below —
+`argus_execute_response` is **not exposed** there, so a public caller can investigate
+and inspect but never run containment.
+</Callout>
+
 ## Tools
 
 | Tool | Description |
