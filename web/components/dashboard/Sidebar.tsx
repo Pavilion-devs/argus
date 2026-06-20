@@ -76,8 +76,8 @@ export default function Sidebar({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => v
         <div className="mb-2 px-2 text-[10px] font-medium uppercase tracking-wider text-zinc-600">Project</div>
         <div className="space-y-1">
           <SideLink href="/" icon="solar:home-smile-linear" label="Home" />
-          <SideLink href="https://github.com" icon="solar:book-2-linear" label="Docs" />
-          <SideLink href="https://github.com" icon="simple-icons:github" label="GitHub" />
+          <SideLink href="/docs" icon="solar:book-2-linear" label="Docs" />
+          <SideLink href="https://github.com/Pavilion-devs/argus" icon="simple-icons:github" label="GitHub" />
         </div>
       </nav>
 
